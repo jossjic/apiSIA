@@ -37,6 +37,34 @@ app.get("/alimentos", (req, res) => {
   });
 });
 
+// Obtener todos los alimentos unido con tabla marca y unidadmedida.
+app.get("/alimentos/join/all", (req, res) => {
+  connection.query(
+    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida ORDER BY Alimento.a_nombre",
+    (err, rows) => {
+      if (err) {
+        console.error("Error de consulta:", err);
+        return res.status(500).send("Error de servidor");
+      }
+      res.json(rows);
+    }
+  );
+});
+
+// Obtener todos los alimentos unido con tabla marca
+app.get("/alimentos/join/marca", (req, res) => {
+  connection.query(
+    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id ORDER BY Alimento.a_nombre",
+    (err, rows) => {
+      if (err) {
+        console.error("Error de consulta:", err);
+        return res.status(500).send("Error de servidor");
+      }
+      res.json(rows);
+    }
+  );
+});
+
 // Obtener un alimento por ID
 app.get("/alimentos/:id", (req, res) => {
   const { id } = req.params;
