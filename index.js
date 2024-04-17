@@ -1,9 +1,9 @@
-const express = require("express");
+import express from "express";
 import bodyParser from "body-parser";
 import { connection } from "./db.js";
 import crypto from "crypto";
 
-module.exports = express();
+const app = express();
 
 // Middleware para analizar el cuerpo de las solicitudes como JSON
 app.use(bodyParser.json());
