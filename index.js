@@ -26,6 +26,8 @@ app.get("/", (req, res) => {
   });
 });
 
+//-------------------------------------------------------------------------------------------------------
+
 // Obtener todos los alimentos
 app.get("/alimentos", (req, res) => {
   connection.query("SELECT * FROM Alimento", (err, rows) => {
@@ -65,11 +67,297 @@ app.get("/alimentos/join/marca", (req, res) => {
   );
 });
 
+//Filtros para alimentos ordenados por fecha de caducidad u=up(de menos cercana a más cercana) d=down(de más cercana a menos cercana)
+
+// mostrar solo alimentos caducados dCad
+app.get("/alimentos/caducados/dCad", (req, res) => {
+  connection.query(
+    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_fechaCaducidad < NOW() ORDER BY a_fechaCaducidad",
+    (err, rows) => {
+      if (err) {
+        console.error("Error de consulta:", err);
+        return res.status(500).send("Error de servidor");
+      }
+      res.json(rows);
+    }
+  );
+});
+
+// mostrar solo alimentos por caducar dCad
+app.get("/alimentos/proximoscaducados/dCad", (req, res) => {
+  connection.query(
+    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_fechaCaducidad < DATE_ADD(NOW(), INTERVAL 1 MONTH) AND a_fechaCaducidad > NOW() ORDER BY a_fechaCaducidad",
+    (err, rows) => {
+      if (err) {
+        console.error("Error de consulta:", err);
+        return res.status(500).send("Error de servidor");
+      }
+      res.json(rows);
+    }
+  );
+});
+
+// mostrar solo alimentos con disponibilidad dCad
+app.get("/alimentos/disponibles/dCad", (req, res) => {
+  connection.query(
+    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_stock > 0 ORDER BY a_fechaCaducidad",
+    (err, rows) => {
+      if (err) {
+        console.error("Error de consulta:", err);
+        return res.status(500).send("Error de servidor");
+      }
+      res.json(rows);
+    }
+  );
+});
+
+// mostrar solo alimentos sin disponibilidad dCad
+app.get("/alimentos/nodisponibles/dCad", (req, res) => {
+  connection.query(
+    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_stock = 0 ORDER BY a_fechaCaducidad",
+    (err, rows) => {
+      if (err) {
+        console.error("Error de consulta:", err);
+        return res.status(500).send("Error de servidor");
+      }
+      res.json(rows);
+    }
+  );
+});
+
+// mostrar solo alimentos caducados uCad
+app.get("/alimentos/caducados/uCad", (req, res) => {
+  connection.query(
+    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_fechaCaducidad < NOW() ORDER BY a_fechaCaducidad DESC",
+    (err, rows) => {
+      if (err) {
+        console.error("Error de consulta:", err);
+        return res.status(500).send("Error de servidor");
+      }
+      res.json(rows);
+    }
+  );
+});
+
+// mostrar solo alimentos por caducar uCad
+app.get("/alimentos/proximoscaducados/uCad", (req, res) => {
+  connection.query(
+    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_fechaCaducidad < DATE_ADD(NOW(), INTERVAL 1 MONTH) AND a_fechaCaducidad > NOW() ORDER BY a_fechaCaducidad DESC",
+    (err, rows) => {
+      if (err) {
+        console.error("Error de consulta:", err);
+        return res.status(500).send("Error de servidor");
+      }
+      res.json(rows);
+    }
+  );
+});
+
+// mostrar solo alimentos con disponibilidad uCad
+app.get("/alimentos/disponibles/uCad", (req, res) => {
+  connection.query(
+    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_stock > 0 ORDER BY a_fechaCaducidad DESC",
+    (err, rows) => {
+      if (err) {
+        console.error("Error de consulta:", err);
+        return res.status(500).send("Error de servidor");
+      }
+      res.json(rows);
+    }
+  );
+});
+
+// mostrar solo alimentos sin disponibilidad uCad
+app.get("/alimentos/nodisponibles/uCad", (req, res) => {
+  connection.query(
+    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_stock = 0 ORDER BY a_fechaCaducidad DESC",
+    (err, rows) => {
+      if (err) {
+        console.error("Error de consulta:", err);
+        return res.status(500).send("Error de servidor");
+      }
+      res.json(rows);
+    }
+  );
+});
+
+//Filtros para alimentos ordenados por fecha de entrada u=up(de menos cercana a más cercana) d=down(de más cercana a menos cercana)
+
+// mostrar solo alimentos caducados dEnt
+app.get("/alimentos/caducados/dEnt", (req, res) => {
+  connection.query(
+    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_fechaCaducidad < NOW() ORDER BY a_fechaEntrada",
+    (err, rows) => {
+      if (err) {
+        console.error("Error de consulta:", err);
+        return res.status(500).send("Error de servidor");
+      }
+      res.json(rows);
+    }
+  );
+});
+
+// mostrar solo alimentos por caducar dEnt
+app.get("/alimentos/proximoscaducados/dEnt", (req, res) => {
+  connection.query(
+    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_fechaCaducidad < DATE_ADD(NOW(), INTERVAL 1 MONTH) AND a_fechaCaducidad > NOW() ORDER BY a_fechaEntrada",
+    (err, rows) => {
+      if (err) {
+        console.error("Error de consulta:", err);
+        return res.status(500).send("Error de servidor");
+      }
+      res.json(rows);
+    }
+  );
+});
+
+// mostrar solo alimentos con disponibilidad dEnt
+app.get("/alimentos/disponibles/dEnt", (req, res) => {
+  connection.query(
+    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_stock > 0 ORDER BY a_fechaEntrada",
+    (err, rows) => {
+      if (err) {
+        console.error("Error de consulta:", err);
+        return res.status(500).send("Error de servidor");
+      }
+      res.json(rows);
+    }
+  );
+});
+
+// mostrar solo alimentos sin disponibilidad dEnt
+app.get("/alimentos/nodisponibles/dEnt", (req, res) => {
+  connection.query(
+    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_stock = 0 ORDER BY a_fechaEntrada",
+    (err, rows) => {
+      if (err) {
+        console.error("Error de consulta:", err);
+        return res.status(500).send("Error de servidor");
+      }
+      res.json(rows);
+    }
+  );
+});
+
+// mostrar solo alimentos caducados uEnt
+app.get("/alimentos/caducados/uEnt", (req, res) => {
+  connection.query(
+    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_fechaCaducidad < NOW() ORDER BY a_fechaEntrada DESC",
+    (err, rows) => {
+      if (err) {
+        console.error("Error de consulta:", err);
+        return res.status(500).send("Error de servidor");
+      }
+      res.json(rows);
+    }
+  );
+});
+
+// mostrar solo alimentos por caducar uEnt
+app.get("/alimentos/proximoscaducados/uEnt", (req, res) => {
+  connection.query(
+    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_fechaCaducidad < DATE_ADD(NOW(), INTERVAL 1 MONTH) AND a_fechaCaducidad > NOW() ORDER BY a_fechaEntrada DESC",
+    (err, rows) => {
+      if (err) {
+        console.error("Error de consulta:", err);
+        return res.status(500).send("Error de servidor");
+      }
+      res.json(rows);
+    }
+  );
+});
+
+// mostrar solo alimentos con disponibilidad uEnt
+app.get("/alimentos/disponibles/uEnt", (req, res) => {
+  connection.query(
+    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_stock > 0 ORDER BY a_fechaEntrada DESC",
+    (err, rows) => {
+      if (err) {
+        console.error("Error de consulta:", err);
+        return res.status(500).send("Error de servidor");
+      }
+      res.json(rows);
+    }
+  );
+});
+
+// mostrar solo alimentos sin disponibilidad uEnt
+app.get("/alimentos/nodisponibles/uEnt", (req, res) => {
+  connection.query(
+    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_stock = 0 ORDER BY a_fechaEntrada DESC",
+    (err, rows) => {
+      if (err) {
+        console.error("Error de consulta:", err);
+        return res.status(500).send("Error de servidor");
+      }
+      res.json(rows);
+    }
+  );
+});
+
+//Filtros para alimentos ordenados en orden alfabético para nombre producto(de la A a la Z)
+
+// mostrar solo alimentos caducados alfaB
+app.get("/alimentos/caducados/alfaB", (req, res) => {
+  connection.query(
+    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_fechaCaducidad < NOW() ORDER BY a_nombre",
+    (err, rows) => {
+      if (err) {
+        console.error("Error de consulta:", err);
+        return res.status(500).send("Error de servidor");
+      }
+      res.json(rows);
+    }
+  );
+});
+
+// mostrar solo alimentos por caducar alfaB
+app.get("/alimentos/proximoscaducados/alfaB", (req, res) => {
+  connection.query(
+    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_fechaCaducidad < DATE_ADD(NOW(), INTERVAL 1 MONTH) AND a_fechaCaducidad > NOW() ORDER BY a_nombre",
+    (err, rows) => {
+      if (err) {
+        console.error("Error de consulta:", err);
+        return res.status(500).send("Error de servidor");
+      }
+      res.json(rows);
+    }
+  );
+});
+
+// mostrar solo alimentos con disponibilidad alfaB
+app.get("/alimentos/disponibles/alfaB", (req, res) => {
+  connection.query(
+    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_stock > 0 ORDER BY a_nombre",
+    (err, rows) => {
+      if (err) {
+        console.error("Error de consulta:", err);
+        return res.status(500).send("Error de servidor");
+      }
+      res.json(rows);
+    }
+  );
+});
+
+// mostrar solo alimentos sin disponibilidad alfaB
+app.get("/alimentos/nodisponibles/alfaB", (req, res) => {
+  connection.query(
+    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_stock = 0 ORDER BY a_nombre",
+    (err, rows) => {
+      if (err) {
+        console.error("Error de consulta:", err);
+        return res.status(500).send("Error de servidor");
+      }
+      res.json(rows);
+    }
+  );
+});
+
 // Obtener un alimento por ID
 app.get("/alimentos/:id", (req, res) => {
   const { id } = req.params;
   connection.query(
-    "SELECT * FROM Alimento WHERE a_id = ?",
+    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_id = ?",
     [id],
     (err, rows) => {
       if (err) {
@@ -492,6 +780,97 @@ app.get("/usuario-alimento", (req, res) => {
   });
 });
 
+//Obtener todos los registros de UsuarioAlimento unido con tabla Usuario y Alimento
+app.get("/usuario-alimento/join/all", (req, res) => {
+  connection.query(
+    "SELECT * FROM UsuarioAlimento NATURAL JOIN Usuario NATURAL JOIN Alimento",
+    (err, rows) => {
+      if (err) {
+        console.error(
+          "Error al obtener los registros de UsuarioAlimento unido con tabla Usuario y Alimento:",
+          err
+        );
+        return res.status(500).send("Error de servidor");
+      }
+      res.json(rows);
+    }
+  );
+});
+
+//Obtener todos los registros de UsuarioAlimento unido con tabla Usuario y Alimento por ID de usuario
+app.get("/usuario-alimento/join/all/usuario/:id", (req, res) => {
+  const { id } = req.params;
+  connection.query(
+    "SELECT * FROM UsuarioAlimento NATURAL JOIN Usuario NATURAL JOIN Alimento WHERE u_id = ?",
+    [id],
+    (err, rows) => {
+      if (err) {
+        console.error(
+          "Error al obtener los registros de UsuarioAlimento unido con tabla Usuario y Alimento por ID de usuario:",
+          err
+        );
+        return res.status(500).send("Error de servidor");
+      }
+      res.json(rows);
+    }
+  );
+});
+
+//Obtener todos los registros de UsuarioAlimento unido con tabla Usuario y Alimento por ID de alimento
+app.get("/usuario-alimento/join/all/alimento/:id", (req, res) => {
+  const { id } = req.params;
+  connection.query(
+    "SELECT * FROM UsuarioAlimento NATURAL JOIN Usuario NATURAL JOIN Alimento WHERE a_id = ?",
+    [id],
+    (err, rows) => {
+      if (err) {
+        console.error(
+          "Error al obtener los registros de UsuarioAlimento unido con tabla Usuario y Alimento por ID de alimento:",
+          err
+        );
+        return res.status(500).send("Error de servidor");
+      }
+      res.json(rows);
+    }
+  );
+});
+
+// Obtener registros de UsuarioAlimento join alimento, incluyendo a_id = null
+
+app.get("/usuario-alimento/alimento/null", (req, res) => {
+  connection.query(
+    "SELECT * FROM UsuarioAlimento as ua LEFT OUTER JOIN Alimento as a ON ua.a_id = a.a_id",
+    (err, rows) => {
+      if (err) {
+        console.error(
+          "Error al obtener los registros de UsuarioAlimento a_id = null:",
+          err
+        );
+        return res.status(500).send("Error de servidor");
+      }
+      res.json(rows);
+    }
+  );
+});
+
+// Obtener registros de UsuarioAlimento join usuario, incluyendo u_id = null
+
+app.get("/usuario-alimento/usuario/null", (req, res) => {
+  connection.query(
+    "SELECT * FROM UsuarioAlimento as ua LEFT OUTER JOIN Usuario as u ON ua.u_id = u.u_id",
+    (err, rows) => {
+      if (err) {
+        console.error(
+          "Error al obtener los registros de UsuarioAlimento u_id = null:",
+          err
+        );
+        return res.status(500).send("Error de servidor");
+      }
+      res.json(rows);
+    }
+  );
+});
+
 // Obtener los registros de UsuarioAlimento por ID de usuario
 app.get("/usuario-alimento/usuario/:id", (req, res) => {
   const { id } = req.params;
@@ -534,7 +913,7 @@ app.get("/usuario-alimento/alimento/:id", (req, res) => {
 app.post("/usuario-alimento", (req, res) => {
   const { u_id, a_id, ua_cantidad, ua_accion } = req.body;
   connection.query(
-    "INSERT INTO UsuarioAlimento (u_id, a_id, ua_cantidad, ua_accion) VALUES (?, ?, ?, ?)",
+    "INSERT INTO UsuarioAlimento (u_id, a_id, ua_cantidad, ua_accion, ua_fecha) VALUES (?, ?, ?, ?, NOW())",
     [u_id, a_id, ua_cantidad, ua_accion],
     (err, result) => {
       if (err) {
@@ -570,6 +949,37 @@ app.delete("/usuario-alimento/:id", (req, res) => {
       res
         .status(200)
         .send("Registro de UsuarioAlimento eliminado correctamente");
+    }
+  );
+});
+
+//-----------------------------------------------------------------------------------------------------------------------------------
+// FUNCTION contarRegistrosUsuario(usuario_id VARCHAR(20))
+
+app.get("/usuarios/registro/:id", (req, res) => {
+  const { id } = req.params;
+  connection.query("SELECT contarRegistrosUsuario(?)", [id], (err, rows) => {
+    if (err) {
+      console.error("Error de consulta:", err);
+      return res.status(500).send("Error de servidor");
+    }
+    res.json(rows[0]);
+  });
+});
+
+// PROCEDURE stockAlimentos (IN alimento_id INT, IN usuario_id VARCHAR(20), IN actionType INT, IN quantity INT)
+// Actions: Add Reduce Update = 0 1 2
+app.post("/usuarios/stock", (req, res) => {
+  const { a_id, u_id, actionType, quantity } = req.body;
+  connection.query(
+    "CALL stockAlimentos(?, ?, ?, ?)",
+    [a_id, u_id, actionType, quantity],
+    (err, rows) => {
+      if (err) {
+        console.error("Error al ejecutar el procedimiento:", err);
+        return res.status(500).send("Error de servidor");
+      }
+      res.status(200).send("Procedimiento ejecutado correctamente");
     }
   );
 });
