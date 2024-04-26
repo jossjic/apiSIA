@@ -399,7 +399,6 @@ app.post("/alimentos", (req, res) => {
       (err, result) => {
         if (err) {
           console.error("Error al insertar alimento:", err);
-          console.log(req.body);
           return res.status(500).send("Error de servidor");
         }
         res.status(201).send("Alimento agregado correctamente");
@@ -421,7 +420,6 @@ app.post("/alimentos", (req, res) => {
       (err, result) => {
         if (err) {
           console.error("Error al insertar alimento:", err);
-          console.log(req.body);
           return res.status(500).send("Error de servidor");
         }
         res.status(201).send("Alimento agregado correctamente");
