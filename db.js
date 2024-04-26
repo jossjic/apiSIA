@@ -1,8 +1,8 @@
 import mysql from "mysql";
 
 export const connection = mysql.createConnection({
-  host: "database-sia.cn6ciymc8chd.us-east-2.rds.amazonaws.com",
-  user: "admin",
+  host: "localhost",
+  user: "root",
   password: "AdminSIA10042024JJLACV",
   database: "db_sia",
 });

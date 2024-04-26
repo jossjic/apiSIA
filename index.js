@@ -384,26 +384,50 @@ app.post("/alimentos", (req, res) => {
     um_id,
     m_id,
   } = req.body;
-  connection.query(
-    "INSERT INTO Alimento (a_nombre, a_cantidad, a_stock, a_fechaSalida, a_fechaEntrada, a_fechaCaducidad, um_id, m_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-    [
-      a_nombre,
-      a_cantidad,
-      a_stock,
-      a_fechaSalida,
-      a_fechaEntrada,
-      a_fechaCaducidad,
-      um_id,
-      m_id,
-    ],
-    (err, result) => {
-      if (err) {
-        console.error("Error al insertar alimento:", err);
-        return res.status(500).send("Error de servidor");
+  if (m_id === 0) {
+    connection.query(
+      "INSERT INTO Alimento (a_nombre, a_cantidad, a_stock, a_fechaSalida, a_fechaEntrada, a_fechaCaducidad, um_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      [
+        a_nombre,
+        a_cantidad,
+        a_stock,
+        a_fechaSalida,
+        a_fechaEntrada,
+        a_fechaCaducidad,
+        um_id,
+      ],
+      (err, result) => {
+        if (err) {
+          console.error("Error al insertar alimento:", err);
+          console.log(req.body);
+          return res.status(500).send("Error de servidor");
+        }
+        res.status(201).send("Alimento agregado correctamente");
       }
-      res.status(201).send("Alimento agregado correctamente");
-    }
-  );
+    );
+  } else {
+    connection.query(
+      "INSERT INTO Alimento (a_nombre, a_cantidad, a_stock, a_fechaSalida, a_fechaEntrada, a_fechaCaducidad, um_id, m_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      [
+        a_nombre,
+        a_cantidad,
+        a_stock,
+        a_fechaSalida,
+        a_fechaEntrada,
+        a_fechaCaducidad,
+        um_id,
+        m_id,
+      ],
+      (err, result) => {
+        if (err) {
+          console.error("Error al insertar alimento:", err);
+          console.log(req.body);
+          return res.status(500).send("Error de servidor");
+        }
+        res.status(201).send("Alimento agregado correctamente");
+      }
+    );
+  }
 });
 
 // Actualizar un alimento por ID
