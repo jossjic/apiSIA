@@ -27,7 +27,7 @@ app.get("/", (req, res) => {
 });
 
 //-------------------------------------------------------------------------------------------------------
-// PRUEBAAAAAAAAAAAAAAAAAAAAA
+// PRUEBAAAAAAAAAAAAAAAAAA
 // Obtener fechas de caducidad de UN ALIMENTO ESPECÍFICO (Lata de Atún 200 g)
 app.get("/alimentos/atun", (req, res) => {
   connection.query("SELECT a_id, a_fechaCaducidad, a_stock FROM Alimento WHERE a_nombre = 'Lata de Atún' AND a_cantidad = 200 AND um_id = 'g'", (err, rows) => {
