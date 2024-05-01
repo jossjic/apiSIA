@@ -39,7 +39,7 @@ app.get("/alimentos/atun", (req, res) => {
     res.json(rows);
   });
 });*/
-app.get("/alimentos/:productId", (req, res) => {
+app.get("/alimentos/checkDate/:productId", (req, res) => {
   const productId = req.params.productId;
   connection.query(
     "SELECT a_id, a_fechaCaducidad, a_stock FROM Alimento WHERE a_nombre = ?",
