@@ -39,17 +39,21 @@ app.get("/alimentos/atun", (req, res) => {
     res.json(rows);
   });
 });*/
-app.get("/alimentos/selectDate/:productId", (req, res) => {
-  const productId = req.params.productId;
+
+pp.get("/alimentos/selectDate/:id", (req, res) => {
+  const { id } = req.params;
   connection.query(
-    "SELECT a_id, a_fechaCaducidad, a_stock FROM Alimento WHERE a_nombre = ?",
-    [productId],
+    "SELECT a_id, a_fechaCaducidad, a_stock FROM Alimento WHERE a_id = ?",
+    [id],
     (err, rows) => {
       if (err) {
         console.error("Error de consulta:", err);
         return res.status(500).send("Error de servidor");
       }
-      res.json(rows);
+      if (rows.length === 0) {
+        return res.status(404).send("Alimento no encontrado");
+      }
+      res.json(rows[0]);
     }
   );
 });
