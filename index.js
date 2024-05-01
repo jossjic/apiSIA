@@ -40,35 +40,28 @@ app.get("/alimentos/atun", (req, res) => {
 });
 
 // Obtener informacion para la tabla dentro de checkDate
-/*
-app.get("/alimentos/checkDate/:id", (req, res) => {
-  connection.query("SELECT a_nombre, a_cantidad, um_id, m_id FROM Alimento WHERE a_id = ?", (err, rows) => {
-    if (err) {
-      console.error("Error de consulta:", err);
-      return res.status(500).send("Error de servidor");
-    }
-    res.json(rows);
-  });
-});
-*/
+app.get("/alimentos/checkDate", (req, res) => {
+  const ids = req.query.ids;
 
-app.get("/alimento/checkDate/:id", (req, res) => {
-  const { id } = req.params;
+  if (!Array.isArray(ids) || !ids.length) {
+    return res.status(400).send("No se proporcionaron IDs válidos");
+  }
+
+  const placeholders = ids.map((_, i) => "?").join(",");
   connection.query(
-    "SELECT * FROM Usuario WHERE a_id = ?",
-    [id],
+    `SELECT a_nombre, a_cantidad, um_id, m_id FROM Alimento WHERE a_id IN (${placeholders})`,
+    ids,
     (err, rows) => {
       if (err) {
         console.error("Error de consulta:", err);
         return res.status(500).send("Error de servidor");
       }
-      if (rows.length === 0) {
-        return res.status(404).send("Alimento no encontrado");
-      }
-      res.json(rows[0]);
+      res.json(rows);
     }
   );
 });
+
+
 
 // Obtener todos los alimentos
 app.get("/alimentos", (req, res) => {
