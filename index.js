@@ -39,6 +39,17 @@ app.get("/alimentos/atun", (req, res) => {
   });
 });
 
+// Obtener informacion para la tabla dentro de checkDate
+app.get("/alimentos/checkDate", (req, res) => {
+  connection.query("SELECT a_id, a_nombre, a_cantidad, um_id, m_id FROM Alimento WHERE a_id = ?", (err, rows) => {
+    if (err) {
+      console.error("Error de consulta:", err);
+      return res.status(500).send("Error de servidor");
+    }
+    res.json(rows);
+  });
+});
+
 // Obtener todos los alimentos
 app.get("/alimentos", (req, res) => {
   connection.query("SELECT * FROM Alimento", (err, rows) => {
