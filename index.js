@@ -1,28 +1,50 @@
 import express from "express";
 import bodyParser from "body-parser";
+import session from "express-session";
 import { connection } from "./db.js";
 import crypto from "crypto";
-import jwt from 'jsonwebtoken';
 
 const app = express();
 
-// Middleware para verificar el token JWT en las solicitudes protegidas
-const authenticateToken = (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-  if (token == null) return res.sendStatus(401); // No hay token
+app.use(
+  session({
+    secret: 'your_secret_key_here',
+    resave: false,
+    saveUninitialized: true
+  })
+);
 
-  jwt.verify(token, 'secreto', (err, user) => {
-    if (err) return res.sendStatus(403); // Token inválido
-    req.user = user;
-    next();
+app.post("/login", (req, res) => {
+  const { id, password } = req.body;
+
+  // Verificar el usuario en la base de datos
+  connection.query("SELECT * FROM Usuario WHERE u_id = ?", [id], (err, rows) => {
+    if (err) {
+      console.error("Error de consulta:", err);
+      return res.status(500).send("Error de servidor");
+    }
+    if (rows.length === 0) {
+      return res.status(401).send("Usuario incorrecto");
+    }
+
+    const userData = rows[0];
+    const hashedPassword = crypto.createHash('sha256').update(password).digest('hex');
+
+    if (userData.u_contraseña === hashedPassword) {
+      // Establecer la sesión del usuario
+      req.session.userId = userData.u_id;
+      res.sendStatus(200);
+    } else {
+      res.status(401).send("Contraseña incorrecta");
+    }
   });
-};
+});
 
-// Ruta protegida que requiere autenticación
-app.get('/rutaProtegida', authenticateToken, (req, res) => {
-  // Acceso autorizado
-  res.json({ message: 'Acceso autorizado' });
+app.get("/rutaProtegida", (req, res) => {
+  if (!req.session.userId) {
+    return res.status(401).send("No autorizado");
+  }
+  res.redirect("/mainPage");
 });
 
 // Middleware para permitir solicitudes desde localhost:5173
