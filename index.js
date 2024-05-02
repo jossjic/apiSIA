@@ -3,7 +3,25 @@ import bodyParser from "body-parser";
 import { connection } from "./db.js";
 import crypto from "crypto";
 
+const session = require('express-session')
 const app = express();
+
+// Sesiones
+app.use(session({
+  secret: '123456',
+  resave: true,
+  saveUninitialized: true
+}))
+
+app.get('/testSes', (req, res) => {
+  req.session.usuario = "Prueba";
+  req.session.rol = 1;
+  req.session.visitas = req.session.visitas ? ++req.session.visitas : 1;
+  console.log(req.session);
+  res.send(`El usuario <strong>${req.session.rol}</strong>
+          con rol <strong>${req.session.rol}</strong>
+          ha visitado está página <strong>${req.session.visitas}</strong>`)
+})
 
 // Middleware para permitir solicitudes desde localhost:5173
 app.use((req, res, next) => {
