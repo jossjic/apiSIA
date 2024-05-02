@@ -61,6 +61,19 @@ app.post("/login", (req, res) => {
   });
 });
 
+// Guardar informacion en la sesion
+app.post("/saveMessage", (req, res) => {
+  const { message } = req.body; 
+  req.session.message = message; 
+  res.sendStatus(200);
+});
+
+// Obtener informacion de la sesion
+app.get("/getMessage", (req, res) => {
+  const message = req.session.message || ''; 
+  res.send(message);
+});
+
 //-------------------------------------------------------------------------------------------------------
 // PRUEBAAAAAAAAAAAAAAAAA
 // Obtener fechas de caducidad de UN ALIMENTO ESPECÍFICO (Lata de Atún 200 g)
