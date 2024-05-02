@@ -39,6 +39,17 @@ app.get("/alimentos/atun", (req, res) => {
   });
 });
 
+// Obtener todas las fechas de caducidad
+app.get("/alimentos/atun/:id", (req, res) => {
+  connection.query("SELECT a_id, a_fechaCaducidad, a_stock FROM Alimento WHERE a_nombre = ( SELECT a_nombre FROM Alimento WHERE a_id = ?)", (err, rows) => {
+    if (err) {
+      console.error("Error de consulta:", err);
+      return res.status(500).send("Error de servidor");
+    }
+    res.json(rows);
+  });
+});
+
 // Obtener informacion para la tabla dentro de checkDate
 app.get("/alimentos/checkDate", (req, res) => {
   const ids = req.query.ids;
