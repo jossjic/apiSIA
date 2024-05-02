@@ -30,13 +30,16 @@ app.get("/", (req, res) => {
 // PRUEBAAAAAAAAAAAAAAAAA
 // Obtener fechas de caducidad de UN ALIMENTO ESPECÍFICO (Lata de Atún 200 g)
 app.get("/alimentos/atun", (req, res) => {
-  connection.query("SELECT a_id, a_fechaCaducidad, a_stock FROM Alimento WHERE a_nombre = 'Lata de Atún' AND a_cantidad = 200 AND um_id = 'g'", (err, rows) => {
-    if (err) {
-      console.error("Error de consulta:", err);
-      return res.status(500).send("Error de servidor");
+  connection.query(
+    "SELECT a_id, a_fechaCaducidad, a_stock FROM Alimento WHERE a_nombre = 'Lata de Atún' AND a_cantidad = 200 AND um_id = 'g'",
+    (err, rows) => {
+      if (err) {
+        console.error("Error de consulta:", err);
+        return res.status(500).send("Error de servidor");
+      }
+      res.json(rows);
     }
-    res.json(rows);
-  });
+  );
 });
 
 // Obtener todos los alimentos
@@ -66,8 +69,13 @@ app.get("/alimentos/join/all", (req, res) => {
 
 // Obtener todos los alimentos unido con tabla marca
 app.get("/alimentos/join/marca", (req, res) => {
+  const page = parseInt(req.query.page) || 1; // Página actual
+  const pageSize = parseInt(req.query.pageSize) || 10; // Tamaño de la página
+  const offset = (page - 1) * pageSize; // Desplazamiento
+
   connection.query(
-    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id ORDER BY Alimento.a_nombre",
+    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id ORDER BY Alimento.a_nombre LIMIT ?, ?",
+    [offset, pageSize],
     (err, rows) => {
       if (err) {
         console.error("Error de consulta:", err);
@@ -77,7 +85,6 @@ app.get("/alimentos/join/marca", (req, res) => {
     }
   );
 });
-
 //Filtros para alimentos ordenados por fecha de caducidad u=up(de menos cercana a más cercana) d=down(de más cercana a menos cercana)
 
 // mostrar solo alimentos caducados dCad
