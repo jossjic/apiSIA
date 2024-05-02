@@ -66,7 +66,7 @@ app.get("/alimentos/atun", (req, res) => {
 app.get("/alimentos/atun/:id", (req, res) => {
   const { id } = req.params;
   connection.query(
-    "SELECT a_id, a_fechaCaducidad, a_stock FROM Alimento WHERE a_nombre = ( SELECT a_nombre FROM Alimento WHERE a_id = ?)",
+    "SELECT a_id, a_fechaCaducidad, a_stock FROM Alimento WHERE a_nombre = ( SELECT a_nombre FROM Alimento WHERE a_id = ?) AND a_cantidad = ( SELECT a_cantidad FROM Alimento WHERE a_id = ?) AND um_id = ( SELECT um_id FROM Alimento WHERE a_id = ?)",
     [id],
     (err, rows) => {
       if (err) {
