@@ -42,6 +42,47 @@ app.get("/alimentos/atun", (req, res) => {
   );
 });
 
+// Obtener todas las fechas de caducidad
+app.get("/alimentos/atun/:id", (req, res) => {
+  const { id } = req.params;
+  connection.query(
+    "SELECT a_id, a_fechaCaducidad, a_stock FROM Alimento WHERE a_nombre = ( SELECT a_nombre FROM Alimento WHERE a_id = ?)",
+    [id],
+    (err, rows) => {
+      if (err) {
+        console.error("Error de consulta:", err);
+        return res.status(500).send("Error de servidor");
+      }
+      if (rows.length === 0) {
+        return res.status(404).send("Alimento no encontrado");
+      }
+      res.json(rows);
+    }
+  );
+});
+
+// Obtener informacion para la tabla dentro de checkDate
+app.get("/alimentos/checkDate", (req, res) => {
+  const ids = req.query.ids;
+
+  if (!Array.isArray(ids) || !ids.length) {
+    return res.status(400).send("No se proporcionaron IDs válidos");
+  }
+
+  const placeholders = ids.map((_, i) => "?").join(",");
+  connection.query(
+    `SELECT a_id, a_nombre, a_cantidad, um_id, m_id FROM Alimento WHERE a_id IN (${placeholders})`,
+    ids,
+    (err, rows) => {
+      if (err) {
+        console.error("Error de consulta:", err);
+        return res.status(500).send("Error de servidor");
+      }
+      res.json(rows);
+    }
+  );
+});
+
 // Obtener todos los alimentos
 app.get("/alimentos", (req, res) => {
   connection.query("SELECT * FROM Alimento", (err, rows) => {
