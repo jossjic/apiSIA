@@ -2,8 +2,28 @@ import express from "express";
 import bodyParser from "body-parser";
 import { connection } from "./db.js";
 import crypto from "crypto";
+import jwt from 'jsonwebtoken';
 
 const app = express();
+
+// Middleware para verificar el token JWT en las solicitudes protegidas
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  if (token == null) return res.sendStatus(401); // No hay token
+
+  jwt.verify(token, 'secreto', (err, user) => {
+    if (err) return res.sendStatus(403); // Token inválido
+    req.user = user;
+    next();
+  });
+};
+
+// Ruta protegida que requiere autenticación
+app.get('/rutaProtegida', authenticateToken, (req, res) => {
+  // Acceso autorizado
+  res.json({ message: 'Acceso autorizado' });
+});
 
 // Middleware para permitir solicitudes desde localhost:5173
 app.use((req, res, next) => {
