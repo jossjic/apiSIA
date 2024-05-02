@@ -6,6 +6,27 @@ import crypto from "crypto";
 
 const app = express();
 
+// Middleware para permitir solicitudes desde localhost:5173
+app.use((req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", "http://localhost:5173");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  next();
+});
+
+// Middleware para analizar el cuerpo de las solicitudes como JSON
+app.use(bodyParser.json());
+
+app.get("/", (req, res) => {
+  connection.query("SELECT * FROM Alimento", (err, rows) => {
+    if (err) {
+      console.error("Error de consulta:", err);
+      return res.status(500).send("Error de servidor");
+    }
+    res.json(rows);
+  });
+});
+
 app.use(
   session({
     secret: '12345',
@@ -37,27 +58,6 @@ app.post("/login", (req, res) => {
     } else {
       res.status(401).send("Contraseña incorrecta");
     }
-  });
-});
-
-// Middleware para permitir solicitudes desde localhost:5173
-app.use((req, res, next) => {
-  res.setHeader("Access-Control-Allow-Origin", "http://localhost:5173");
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  next();
-});
-
-// Middleware para analizar el cuerpo de las solicitudes como JSON
-app.use(bodyParser.json());
-
-app.get("/", (req, res) => {
-  connection.query("SELECT * FROM Alimento", (err, rows) => {
-    if (err) {
-      console.error("Error de consulta:", err);
-      return res.status(500).send("Error de servidor");
-    }
-    res.json(rows);
   });
 });
 
