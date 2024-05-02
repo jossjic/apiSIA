@@ -8,7 +8,7 @@ const app = express();
 
 app.use(
   session({
-    secret: 'your_secret_key_here',
+    secret: '12345',
     resave: false,
     saveUninitialized: true
   })
@@ -37,15 +37,12 @@ app.post("/login", (req, res) => {
     } else {
       res.status(401).send("Contraseña incorrecta");
     }
-  });
-});
 
 app.get("/rutaProtegida", (req, res) => {
   if (!req.session.userId) {
     return res.status(401).send("No autorizado");
   }
   res.redirect("/mainPage");
-});
 
 // Middleware para permitir solicitudes desde localhost:5173
 app.use((req, res, next) => {
@@ -88,7 +85,7 @@ app.get("/alimentos/atun", (req, res) => {
 app.get("/alimentos/atun/:id", (req, res) => {
   const { id } = req.params;
   connection.query(
-    "SELECT a_id, a_fechaCaducidad, a_stock FROM Alimento WHERE a_nombre = ( SELECT a_nombre FROM Alimento WHERE a_id = ?) AND a_cantidad = ( SELECT a_cantidad FROM Alimento WHERE a_id = ?) AND um_id = ( SELECT um_id FROM Alimento WHERE a_id = ?)",
+    "SELECT a1.a_id, a1.a_fechaCaducidad, a1.a_stock FROM Alimento a1 INNER JOIN ( SELECT a_nombre, a_cantidad, um_id FROM Alimento WHERE a_id = ?) a2 ON a1.a_nombre = a2.a_nombre AND a1.a_cantidad = a2.a_cantidad AND a1.um_id = a2.um_id",
     [id],
     (err, rows) => {
       if (err) {
@@ -168,6 +165,18 @@ app.get("/alimentos/join/marca", (req, res) => {
     }
   );
 });
+
+// contar alimentos
+app.get("/alimentos/count", (req, res) => {
+  connection.query("SELECT COUNT(*) AS total FROM Alimento", (err, rows) => {
+    if (err) {
+      console.error("Error de consulta:", err);
+      return res.status(500).send("Error de servidor");
+    }
+    res.json(rows[0]);
+  });
+});
+
 //Filtros para alimentos ordenados por fecha de caducidad u=up(de menos cercana a más cercana) d=down(de más cercana a menos cercana)
 
 // mostrar solo alimentos caducados dCad
