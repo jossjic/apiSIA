@@ -49,7 +49,7 @@ app.get("/alimentos/checkDate", (req, res) => {
 
   const placeholders = ids.map((_, i) => "?").join(",");
   connection.query(
-    `SELECT a_nombre, a_cantidad, um_id, m_id FROM Alimento WHERE a_id IN (${placeholders})`,
+    `SELECT a_id, a_nombre, a_cantidad, um_id, m_id FROM Alimento WHERE a_id IN (${placeholders})`,
     ids,
     (err, rows) => {
       if (err) {
