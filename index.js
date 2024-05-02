@@ -29,7 +29,6 @@ app.get("/", (req, res) => {
 //-------------------------------------------------------------------------------------------------------
 // PRUEBAAAAAAAAAAAAAAAAA
 // Obtener fechas de caducidad de UN ALIMENTO ESPECÍFICO (Lata de Atún 200 g)
-/*
 app.get("/alimentos/atun", (req, res) => {
   connection.query("SELECT a_id, a_fechaCaducidad, a_stock FROM Alimento WHERE a_nombre = 'Lata de Atún' AND a_cantidad = 200 AND um_id = 'g'", (err, rows) => {
     if (err) {
@@ -38,28 +37,10 @@ app.get("/alimentos/atun", (req, res) => {
     }
     res.json(rows);
   });
-});*/
-
-pp.get("/alimentos/selectDate/:id", (req, res) => {
-  const { id } = req.params;
-  connection.query(
-    "SELECT a_id, a_fechaCaducidad, a_stock FROM Alimento WHERE a_id = ?",
-    [id],
-    (err, rows) => {
-      if (err) {
-        console.error("Error de consulta:", err);
-        return res.status(500).send("Error de servidor");
-      }
-      if (rows.length === 0) {
-        return res.status(404).send("Alimento no encontrado");
-      }
-      res.json(rows[0]);
-    }
-  );
 });
 
 // Obtener informacion para la tabla dentro de checkDate
-app.get("/alimentos/checkDate", (req, res) => {
+app.get("/alimentos/checkDate/", (req, res) => {
   const ids = req.query.ids;
 
   if (!Array.isArray(ids) || !ids.length) {
@@ -79,8 +60,6 @@ app.get("/alimentos/checkDate", (req, res) => {
     }
   );
 });
-
-
 
 // Obtener todos los alimentos
 app.get("/alimentos", (req, res) => {
