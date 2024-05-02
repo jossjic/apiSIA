@@ -40,7 +40,7 @@ app.get("/alimentos/atun", (req, res) => {
 });
 
 // Obtener informacion para la tabla dentro de checkDate
-app.get("/alimentos/checkDate/", (req, res) => {
+app.get("/alimentos/checkDate", (req, res) => {
   const ids = req.query.ids;
 
   if (!Array.isArray(ids) || !ids.length) {
