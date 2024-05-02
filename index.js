@@ -53,7 +53,7 @@ app.get("/alimentos/atun/:id", (req, res) => {
       if (rows.length === 0) {
         return res.status(404).send("Alimento no encontrado");
       }
-      res.json(rows[0]);
+      res.json(rows);
     }
   );
 });
