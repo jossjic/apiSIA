@@ -37,12 +37,8 @@ app.post("/login", (req, res) => {
     } else {
       res.status(401).send("Contraseña incorrecta");
     }
-
-app.get("/rutaProtegida", (req, res) => {
-  if (!req.session.userId) {
-    return res.status(401).send("No autorizado");
-  }
-  res.redirect("/mainPage");
+  });
+});
 
 // Middleware para permitir solicitudes desde localhost:5173
 app.use((req, res, next) => {
