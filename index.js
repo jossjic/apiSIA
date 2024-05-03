@@ -78,6 +78,30 @@ app.get("/getMessage", (req, res) => {
   res.send(message);
 });
 
+// Ruta para verificar si el usuario está conectado y devolver sus detalles
+app.get("/checkUser", (req, res) => {
+  // Verificar si hay una sesión activa
+  if (req.session.userId) {
+    // Si hay una sesión activa, buscar los detalles del usuario en la base de datos
+    connection.query("SELECT * FROM Usuario WHERE u_id = ?", [req.session.userId], (err, rows) => {
+      if (err) {
+        console.error("Error de consulta:", err);
+        return res.status(500).send("Error de servidor");
+      }
+      if (rows.length === 0) {
+        return res.status(401).send("Usuario no encontrado");
+      }
+
+      const userData = rows[0];
+      // Devolver los detalles del usuario
+      res.json(userData);
+    });
+  } else {
+    // Si no hay sesión activa, devolver un error
+    res.status(401).send("Usuario no conectado");
+  }
+});
+
 //-------------------------------------------------------------------------------------------------------
 // PRUEBAAAAAAAAAAAAAAAAA
 // Obtener fechas de caducidad de UN ALIMENTO ESPECÍFICO (Lata de Atún 200 g)
