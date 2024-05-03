@@ -3,8 +3,22 @@ import bodyParser from "body-parser";
 import session from "express-session";
 import { connection } from "./db.js";
 import crypto from "crypto";
+import mysqlSession from "express-mysql-session";
 
 const app = express();
+
+const MySQLStore = mysqlSession(session);
+const sessionStore = new MySQLStore({}, connection);
+
+app.use(
+  session({
+    key: "user_cookie",
+    secret: "12345",
+    store: sessionStore,
+    resave: false,
+    saveUninitialized: false,
+  })
+);
 
 // Middleware para permitir solicitudes desde localhost:5173
 app.use((req, res, next) => {
@@ -27,14 +41,6 @@ app.get("/", (req, res) => {
     res.json(rows);
   });
 });
-
-app.use(
-  session({
-    secret: '12345',
-    resave: false,
-    saveUninitialized: true
-  })
-);
 
 app.post("/login", (req, res) => {
   const { id, password } = req.body;
@@ -75,7 +81,7 @@ app.post("/saveMessage", (req, res) => {
 app.get("/getMessage", (req, res) => {
   const message = req.session.message || ''; 
   console.log("Mensaje obtenido de la sesión:", message);
-  res.send(message);
+  res.json(message);
 });
 
 // Ruta para verificar si el usuario está conectado y devolver sus detalles
