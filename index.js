@@ -128,6 +128,19 @@ app.get("/alimentos/join/all", (req, res) => {
   );
 });
 
+// contar alimentos
+app.get("/alimentos/count", (req, res) => {
+  connection.query("SELECT COUNT(*) AS total FROM Alimento", (err, rows) => {
+    if (err) {
+      console.error("Error de consulta:", err);
+      return res.status(500).send("Error de servidor");
+    }
+    res.json(rows[0]);
+  });
+});
+
+//Filtros para alimentos ordenados por fecha de caducidad u=up(de menos cercana a más cercana) d=down(de más cercana a menos cercana)
+
 // Obtener todos los alimentos unido con tabla marca
 app.get("/alimentos/join/marca", (req, res) => {
   const page = parseInt(req.query.page) || 1; // Página actual
@@ -146,24 +159,15 @@ app.get("/alimentos/join/marca", (req, res) => {
     }
   );
 });
-
-// contar alimentos
-app.get("/alimentos/count", (req, res) => {
-  connection.query("SELECT COUNT(*) AS total FROM Alimento", (err, rows) => {
-    if (err) {
-      console.error("Error de consulta:", err);
-      return res.status(500).send("Error de servidor");
-    }
-    res.json(rows[0]);
-  });
-});
-
-//Filtros para alimentos ordenados por fecha de caducidad u=up(de menos cercana a más cercana) d=down(de más cercana a menos cercana)
-
 // mostrar solo alimentos caducados dCad
 app.get("/alimentos/caducados/dCad", (req, res) => {
+  const page = parseInt(req.query.page) || 1; // Página actual
+  const pageSize = parseInt(req.query.pageSize) || 10; // Tamaño de la página
+  const offset = (page - 1) * pageSize; // Desplazamiento
+
   connection.query(
-    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_fechaCaducidad < NOW() ORDER BY a_fechaCaducidad",
+    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_fechaCaducidad < NOW() ORDER BY a_fechaCaducidad LIMIT ?, ?",
+    [offset, pageSize],
     (err, rows) => {
       if (err) {
         console.error("Error de consulta:", err);
@@ -176,8 +180,13 @@ app.get("/alimentos/caducados/dCad", (req, res) => {
 
 // mostrar solo alimentos por caducar dCad
 app.get("/alimentos/proximoscaducados/dCad", (req, res) => {
+  const page = parseInt(req.query.page) || 1; // Página actual
+  const pageSize = parseInt(req.query.pageSize) || 10; // Tamaño de la página
+  const offset = (page - 1) * pageSize; // Desplazamiento
+
   connection.query(
-    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_fechaCaducidad < DATE_ADD(NOW(), INTERVAL 1 MONTH) AND a_fechaCaducidad > NOW() ORDER BY a_fechaCaducidad",
+    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_fechaCaducidad < DATE_ADD(NOW(), INTERVAL 1 MONTH) AND a_fechaCaducidad > NOW() ORDER BY a_fechaCaducidad LIMIT ?, ?",
+    [offset, pageSize],
     (err, rows) => {
       if (err) {
         console.error("Error de consulta:", err);
@@ -190,8 +199,13 @@ app.get("/alimentos/proximoscaducados/dCad", (req, res) => {
 
 // mostrar solo alimentos con disponibilidad dCad
 app.get("/alimentos/disponibles/dCad", (req, res) => {
+  const page = parseInt(req.query.page) || 1; // Página actual
+  const pageSize = parseInt(req.query.pageSize) || 10; // Tamaño de la página
+  const offset = (page - 1) * pageSize; // Desplazamiento
+
   connection.query(
-    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_stock > 0 ORDER BY a_fechaCaducidad",
+    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_stock > 0 ORDER BY a_fechaCaducidad LIMIT ?, ?",
+    [offset, pageSize],
     (err, rows) => {
       if (err) {
         console.error("Error de consulta:", err);
@@ -204,8 +218,13 @@ app.get("/alimentos/disponibles/dCad", (req, res) => {
 
 // mostrar solo alimentos sin disponibilidad dCad
 app.get("/alimentos/nodisponibles/dCad", (req, res) => {
+  const page = parseInt(req.query.page) || 1; // Página actual
+  const pageSize = parseInt(req.query.pageSize) || 10; // Tamaño de la página
+  const offset = (page - 1) * pageSize; // Desplazamiento
+
   connection.query(
-    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_stock = 0 ORDER BY a_fechaCaducidad",
+    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_stock = 0 ORDER BY a_fechaCaducidad LIMIT ?, ?",
+    [offset, pageSize],
     (err, rows) => {
       if (err) {
         console.error("Error de consulta:", err);
@@ -218,8 +237,13 @@ app.get("/alimentos/nodisponibles/dCad", (req, res) => {
 
 // mostrar solo alimentos caducados uCad
 app.get("/alimentos/caducados/uCad", (req, res) => {
+  const page = parseInt(req.query.page) || 1; // Página actual
+  const pageSize = parseInt(req.query.pageSize) || 10; // Tamaño de la página
+  const offset = (page - 1) * pageSize; // Desplazamiento
+
   connection.query(
-    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_fechaCaducidad < NOW() ORDER BY a_fechaCaducidad DESC",
+    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_fechaCaducidad < NOW() ORDER BY a_fechaCaducidad DESC LIMIT ?, ?",
+    [offset, pageSize],
     (err, rows) => {
       if (err) {
         console.error("Error de consulta:", err);
@@ -232,8 +256,13 @@ app.get("/alimentos/caducados/uCad", (req, res) => {
 
 // mostrar solo alimentos por caducar uCad
 app.get("/alimentos/proximoscaducados/uCad", (req, res) => {
+  const page = parseInt(req.query.page) || 1; // Página actual
+  const pageSize = parseInt(req.query.pageSize) || 10; // Tamaño de la página
+  const offset = (page - 1) * pageSize; // Desplazamiento
+
   connection.query(
-    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_fechaCaducidad < DATE_ADD(NOW(), INTERVAL 1 MONTH) AND a_fechaCaducidad > NOW() ORDER BY a_fechaCaducidad DESC",
+    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_fechaCaducidad < DATE_ADD(NOW(), INTERVAL 1 MONTH) AND a_fechaCaducidad > NOW() ORDER BY a_fechaCaducidad DESC LIMIT ?, ?",
+    [offset, pageSize],
     (err, rows) => {
       if (err) {
         console.error("Error de consulta:", err);
@@ -246,8 +275,13 @@ app.get("/alimentos/proximoscaducados/uCad", (req, res) => {
 
 // mostrar solo alimentos con disponibilidad uCad
 app.get("/alimentos/disponibles/uCad", (req, res) => {
+  const page = parseInt(req.query.page) || 1; // Página actual
+  const pageSize = parseInt(req.query.pageSize) || 10; // Tamaño de la página
+  const offset = (page - 1) * pageSize; // Desplazamiento
+
   connection.query(
-    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_stock > 0 ORDER BY a_fechaCaducidad DESC",
+    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_stock > 0 ORDER BY a_fechaCaducidad DESC LIMIT ?, ?",
+    [offset, pageSize],
     (err, rows) => {
       if (err) {
         console.error("Error de consulta:", err);
@@ -260,8 +294,13 @@ app.get("/alimentos/disponibles/uCad", (req, res) => {
 
 // mostrar solo alimentos sin disponibilidad uCad
 app.get("/alimentos/nodisponibles/uCad", (req, res) => {
+  const page = parseInt(req.query.page) || 1; // Página actual
+  const pageSize = parseInt(req.query.pageSize) || 10; // Tamaño de la página
+  const offset = (page - 1) * pageSize; // Desplazamiento
+
   connection.query(
-    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_stock = 0 ORDER BY a_fechaCaducidad DESC",
+    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_stock = 0 ORDER BY a_fechaCaducidad DESC LIMIT ?, ?",
+    [offset, pageSize],
     (err, rows) => {
       if (err) {
         console.error("Error de consulta:", err);
@@ -276,8 +315,13 @@ app.get("/alimentos/nodisponibles/uCad", (req, res) => {
 
 // mostrar solo alimentos caducados dEnt
 app.get("/alimentos/caducados/dEnt", (req, res) => {
+  const page = parseInt(req.query.page) || 1; // Página actual
+  const pageSize = parseInt(req.query.pageSize) || 10; // Tamaño de la página
+  const offset = (page - 1) * pageSize; // Desplazamiento
+
   connection.query(
-    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_fechaCaducidad < NOW() ORDER BY a_fechaEntrada",
+    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_fechaCaducidad < NOW() ORDER BY a_fechaEntrada LIMIT ?, ?",
+    [offset, pageSize],
     (err, rows) => {
       if (err) {
         console.error("Error de consulta:", err);
@@ -290,8 +334,13 @@ app.get("/alimentos/caducados/dEnt", (req, res) => {
 
 // mostrar solo alimentos por caducar dEnt
 app.get("/alimentos/proximoscaducados/dEnt", (req, res) => {
+  const page = parseInt(req.query.page) || 1; // Página actual
+  const pageSize = parseInt(req.query.pageSize) || 10; // Tamaño de la página
+  const offset = (page - 1) * pageSize; // Desplazamiento
+
   connection.query(
-    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_fechaCaducidad < DATE_ADD(NOW(), INTERVAL 1 MONTH) AND a_fechaCaducidad > NOW() ORDER BY a_fechaEntrada",
+    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_fechaCaducidad < DATE_ADD(NOW(), INTERVAL 1 MONTH) AND a_fechaCaducidad > NOW() ORDER BY a_fechaEntrada LIMIT ?, ?",
+    [offset, pageSize],
     (err, rows) => {
       if (err) {
         console.error("Error de consulta:", err);
@@ -304,8 +353,13 @@ app.get("/alimentos/proximoscaducados/dEnt", (req, res) => {
 
 // mostrar solo alimentos con disponibilidad dEnt
 app.get("/alimentos/disponibles/dEnt", (req, res) => {
+  const page = parseInt(req.query.page) || 1; // Página actual
+  const pageSize = parseInt(req.query.pageSize) || 10; // Tamaño de la página
+  const offset = (page - 1) * pageSize; // Desplazamiento
+
   connection.query(
-    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_stock > 0 ORDER BY a_fechaEntrada",
+    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_stock > 0 ORDER BY a_fechaEntrada LIMIT ?, ?",
+    [offset, pageSize],
     (err, rows) => {
       if (err) {
         console.error("Error de consulta:", err);
@@ -318,8 +372,13 @@ app.get("/alimentos/disponibles/dEnt", (req, res) => {
 
 // mostrar solo alimentos sin disponibilidad dEnt
 app.get("/alimentos/nodisponibles/dEnt", (req, res) => {
+  const page = parseInt(req.query.page) || 1; // Página actual
+  const pageSize = parseInt(req.query.pageSize) || 10; // Tamaño de la página
+  const offset = (page - 1) * pageSize; // Desplazamiento
+
   connection.query(
-    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_stock = 0 ORDER BY a_fechaEntrada",
+    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_stock = 0 ORDER BY a_fechaEntrada LIMIT ?, ?",
+    [offset, pageSize],
     (err, rows) => {
       if (err) {
         console.error("Error de consulta:", err);
@@ -332,8 +391,13 @@ app.get("/alimentos/nodisponibles/dEnt", (req, res) => {
 
 // mostrar solo alimentos caducados uEnt
 app.get("/alimentos/caducados/uEnt", (req, res) => {
+  const page = parseInt(req.query.page) || 1; // Página actual
+  const pageSize = parseInt(req.query.pageSize) || 10; // Tamaño de la página
+  const offset = (page - 1) * pageSize; // Desplazamiento
+
   connection.query(
-    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_fechaCaducidad < NOW() ORDER BY a_fechaEntrada DESC",
+    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_fechaCaducidad < NOW() ORDER BY a_fechaEntrada DESC LIMIT ?, ?",
+    [offset, pageSize],
     (err, rows) => {
       if (err) {
         console.error("Error de consulta:", err);
@@ -346,8 +410,13 @@ app.get("/alimentos/caducados/uEnt", (req, res) => {
 
 // mostrar solo alimentos por caducar uEnt
 app.get("/alimentos/proximoscaducados/uEnt", (req, res) => {
+  const page = parseInt(req.query.page) || 1; // Página actual
+  const pageSize = parseInt(req.query.pageSize) || 10; // Tamaño de la página
+  const offset = (page - 1) * pageSize; // Desplazamiento
+
   connection.query(
-    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_fechaCaducidad < DATE_ADD(NOW(), INTERVAL 1 MONTH) AND a_fechaCaducidad > NOW() ORDER BY a_fechaEntrada DESC",
+    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_fechaCaducidad < DATE_ADD(NOW(), INTERVAL 1 MONTH) AND a_fechaCaducidad > NOW() ORDER BY a_fechaEntrada DESC LIMIT ?, ?",
+    [offset, pageSize],
     (err, rows) => {
       if (err) {
         console.error("Error de consulta:", err);
@@ -360,8 +429,13 @@ app.get("/alimentos/proximoscaducados/uEnt", (req, res) => {
 
 // mostrar solo alimentos con disponibilidad uEnt
 app.get("/alimentos/disponibles/uEnt", (req, res) => {
+  const page = parseInt(req.query.page) || 1; // Página actual
+  const pageSize = parseInt(req.query.pageSize) || 10; // Tamaño de la página
+  const offset = (page - 1) * pageSize; // Desplazamiento
+
   connection.query(
-    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_stock > 0 ORDER BY a_fechaEntrada DESC",
+    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_stock > 0 ORDER BY a_fechaEntrada DESC LIMIT ?, ?",
+    [offset, pageSize],
     (err, rows) => {
       if (err) {
         console.error("Error de consulta:", err);
@@ -374,8 +448,13 @@ app.get("/alimentos/disponibles/uEnt", (req, res) => {
 
 // mostrar solo alimentos sin disponibilidad uEnt
 app.get("/alimentos/nodisponibles/uEnt", (req, res) => {
+  const page = parseInt(req.query.page) || 1; // Página actual
+  const pageSize = parseInt(req.query.pageSize) || 10; // Tamaño de la página
+  const offset = (page - 1) * pageSize; // Desplazamiento
+
   connection.query(
-    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_stock = 0 ORDER BY a_fechaEntrada DESC",
+    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_stock = 0 ORDER BY a_fechaEntrada DESC LIMIT ?, ?",
+    [offset, pageSize],
     (err, rows) => {
       if (err) {
         console.error("Error de consulta:", err);
@@ -390,8 +469,13 @@ app.get("/alimentos/nodisponibles/uEnt", (req, res) => {
 
 // mostrar solo alimentos caducados alfaB
 app.get("/alimentos/caducados/alfaB", (req, res) => {
+  const page = parseInt(req.query.page) || 1; // Página actual
+  const pageSize = parseInt(req.query.pageSize) || 10; // Tamaño de la página
+  const offset = (page - 1) * pageSize; // Desplazamiento
+
   connection.query(
-    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_fechaCaducidad < NOW() ORDER BY a_nombre",
+    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_fechaCaducidad < NOW() ORDER BY a_nombre LIMIT ?, ?",
+    [offset, pageSize],
     (err, rows) => {
       if (err) {
         console.error("Error de consulta:", err);
@@ -404,8 +488,13 @@ app.get("/alimentos/caducados/alfaB", (req, res) => {
 
 // mostrar solo alimentos por caducar alfaB
 app.get("/alimentos/proximoscaducados/alfaB", (req, res) => {
+  const page = parseInt(req.query.page) || 1; // Página actual
+  const pageSize = parseInt(req.query.pageSize) || 10; // Tamaño de la página
+  const offset = (page - 1) * pageSize; // Desplazamiento
+
   connection.query(
-    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_fechaCaducidad < DATE_ADD(NOW(), INTERVAL 1 MONTH) AND a_fechaCaducidad > NOW() ORDER BY a_nombre",
+    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_fechaCaducidad < DATE_ADD(NOW(), INTERVAL 1 MONTH) AND a_fechaCaducidad > NOW() ORDER BY a_nombre LIMIT ?, ?",
+    [offset, pageSize],
     (err, rows) => {
       if (err) {
         console.error("Error de consulta:", err);
@@ -418,8 +507,13 @@ app.get("/alimentos/proximoscaducados/alfaB", (req, res) => {
 
 // mostrar solo alimentos con disponibilidad alfaB
 app.get("/alimentos/disponibles/alfaB", (req, res) => {
+  const page = parseInt(req.query.page) || 1; // Página actual
+  const pageSize = parseInt(req.query.pageSize) || 10; // Tamaño de la página
+  const offset = (page - 1) * pageSize; // Desplazamiento
+
   connection.query(
-    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_stock > 0 ORDER BY a_nombre",
+    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_stock > 0 ORDER BY a_nombre LIMIT ?, ?",
+    [offset, pageSize],
     (err, rows) => {
       if (err) {
         console.error("Error de consulta:", err);
@@ -432,8 +526,13 @@ app.get("/alimentos/disponibles/alfaB", (req, res) => {
 
 // mostrar solo alimentos sin disponibilidad alfaB
 app.get("/alimentos/nodisponibles/alfaB", (req, res) => {
+  const page = parseInt(req.query.page) || 1; // Página actual
+  const pageSize = parseInt(req.query.pageSize) || 10; // Tamaño de la página
+  const offset = (page - 1) * pageSize; // Desplazamiento
+
   connection.query(
-    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_stock = 0 ORDER BY a_nombre",
+    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_stock = 0 ORDER BY a_nombre LIMIT ?, ?",
+    [offset, pageSize],
     (err, rows) => {
       if (err) {
         console.error("Error de consulta:", err);
