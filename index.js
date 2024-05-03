@@ -15,6 +15,14 @@ app.use((req, res, next) => {
   next();
 });
 
+app.use(
+  session({
+    secret: '12345',
+    resave: true,
+    saveUninitialized: true
+  })
+);
+
 // Middleware para analizar el cuerpo de las solicitudes como JSON
 app.use(bodyParser.json());
 
@@ -28,13 +36,6 @@ app.get("/", (req, res) => {
   });
 });
 
-app.use(
-  session({
-    secret: '12345',
-    resave: false,
-    saveUninitialized: true
-  })
-);
 
 app.post("/login", (req, res) => {
   const { id, password } = req.body;
