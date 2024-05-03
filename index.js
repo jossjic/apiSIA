@@ -7,6 +7,15 @@ import mysqlSession from "express-mysql-session";
 
 const app = express();
 
+// Middleware para permitir solicitudes desde localhost:5173
+app.use((req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", "http://localhost:5173");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  next();
+});
+
 const MySQLStore = mysqlSession(session);
 const sessionStore = new MySQLStore({}, connection);
 
@@ -19,15 +28,6 @@ app.use(
     saveUninitialized: false,
   })
 );
-
-// Middleware para permitir solicitudes desde localhost:5173
-app.use((req, res, next) => {
-  res.setHeader("Access-Control-Allow-Origin", "http://localhost:5173");
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  res.setHeader("Access-Control-Allow-Credentials", "true");
-  next();
-});
 
 // Middleware para analizar el cuerpo de las solicitudes como JSON
 app.use(bodyParser.json());
@@ -46,62 +46,88 @@ app.post("/login", (req, res) => {
   const { id, password } = req.body;
 
   // Verificar el usuario en la base de datos
-  connection.query("SELECT * FROM Usuario WHERE u_id = ?", [id], (err, rows) => {
-    if (err) {
-      console.error("Error de consulta:", err);
-      return res.status(500).send("Error de servidor");
-    }
-    if (rows.length === 0) {
-      return res.status(401).send("Usuario incorrecto");
-    }
-
-    const userData = rows[0];
-    const hashedPassword = crypto.createHash('sha256').update(password).digest('hex');
-
-    if (userData.u_contraseña === hashedPassword) {
-      // Establecer la sesión del usuario
-      req.session.userId = userData.u_id;
-      res.sendStatus(200);
-    } else {
-      res.status(401).send("Contraseña incorrecta");
-    }
-  });
-});
-
-// Guardar informacion en la sesion
-app.post("/saveMessage", (req, res) => {
-  const { message } = req.body; 
-  req.session.message = message; 
-  const message2 = req.session.message; 
-  console.log("Mensaje obtenido de la sesión:", message2);
-  res.sendStatus(200);
-});
-
-// Obtener informacion de la sesion
-app.get("/getMessage", (req, res) => {
-  const message = req.session.message || ''; 
-  console.log("Mensaje obtenido de la sesión:", message);
-  res.json(message);
-});
-
-// Ruta para verificar si el usuario está conectado y devolver sus detalles
-app.get("/checkUser", (req, res) => {
-  // Verificar si hay una sesión activa
-  if (req.session.userId) {
-    // Si hay una sesión activa, buscar los detalles del usuario en la base de datos
-    connection.query("SELECT * FROM Usuario WHERE u_id = ?", [req.session.userId], (err, rows) => {
+  connection.query(
+    "SELECT * FROM Usuario WHERE u_id = ?",
+    [id],
+    (err, rows) => {
       if (err) {
         console.error("Error de consulta:", err);
         return res.status(500).send("Error de servidor");
       }
       if (rows.length === 0) {
-        return res.status(401).send("Usuario no encontrado");
+        return res.status(401).send("Usuario incorrecto");
       }
 
       const userData = rows[0];
-      // Devolver los detalles del usuario
-      res.json(userData);
-    });
+      const hashedPassword = crypto
+        .createHash("sha256")
+        .update(password)
+        .digest("hex");
+
+      if (userData.u_contraseña === hashedPassword) {
+        // Establecer la sesión del usuario
+        req.session.userId = userData.u_id;
+        res.sendStatus(200);
+      } else {
+        res.status(401).send("Contraseña incorrecta");
+      }
+    }
+  );
+});
+
+// Guardar información en la sesión
+app.post("/saveMessage", (req, res) => {
+  const { message } = req.body;
+  const userId = req.session.userId; // Supongo que guardas el userId en la sesión
+  const sql = `UPDATE sessions SET data = JSON_SET(data, '$.message', ?) WHERE userId = ?`;
+  db.query(sql, [message, userId], (err, result) => {
+    if (err) {
+      console.error("Error al guardar el mensaje en la sesión:", err);
+      res.sendStatus(500);
+    } else {
+      console.log("Mensaje guardado en la sesión:", message);
+      res.sendStatus(200);
+    }
+  });
+});
+
+// Obtener información de la sesión
+app.get("/getMessage", (req, res) => {
+  const userId = req.session.userId; // Supongo que guardas el userId en la sesión
+  const sql = `SELECT JSON_UNQUOTE(JSON_EXTRACT(data, '$.message')) AS message FROM sessions WHERE userId = ?`;
+  db.query(sql, [userId], (err, result) => {
+    if (err) {
+      console.error("Error al obtener el mensaje de la sesión:", err);
+      res.sendStatus(500);
+    } else {
+      const message = result[0] ? result[0].message : ""; // Si no hay mensaje, devuelve una cadena vacía
+      console.log("Mensaje obtenido de la sesión:", message);
+      res.json(message);
+    }
+  });
+});
+// Ruta para verificar si el usuario está conectado y devolver sus detalles
+app.get("/checkUser", (req, res) => {
+  // Verificar si hay una sesión activa
+  if (req.session.userId) {
+    // Si hay una sesión activa, buscar los detalles del usuario en la base de datos
+    connection.query(
+      "SELECT * FROM Usuario WHERE u_id = ?",
+      [req.session.userId],
+      (err, rows) => {
+        if (err) {
+          console.error("Error de consulta:", err);
+          return res.status(500).send("Error de servidor");
+        }
+        if (rows.length === 0) {
+          return res.status(401).send("Usuario no encontrado");
+        }
+
+        const userData = rows[0];
+        // Devolver los detalles del usuario
+        res.json(userData);
+      }
+    );
   } else {
     // Si no hay sesión activa, devolver un error
     res.status(401).send("Usuario no conectado");
@@ -153,7 +179,7 @@ app.get("/alimentos/checkDate", (req, res) => {
 
   const placeholders = ids.map((_, i) => "?").join(",");
   connection.query(
-    `SELECT a.*, (SELECT m_nombre FROM Marca m WHERE m.m_id = a.m_id) AS marca_nombre FROM Alimento a WHERE a.a_id IN (${placeholders});`,
+    `SELECT * FROM Alimento WHERE a_id IN (${placeholders})`,
     ids,
     (err, rows) => {
       if (err) {
@@ -605,133 +631,6 @@ app.get("/alimentos/nodisponibles/alfaB", (req, res) => {
   );
 });
 
-// Obtener un alimento por ID
-app.get("/alimentos/:id", (req, res) => {
-  const { id } = req.params;
-  connection.query(
-    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_id = ?",
-    [id],
-    (err, rows) => {
-      if (err) {
-        console.error("Error de consulta:", err);
-        return res.status(500).send("Error de servidor");
-      }
-      if (rows.length === 0) {
-        return res.status(404).send("Alimento no encontrado");
-      }
-      res.json(rows[0]);
-    }
-  );
-});
-
-// Agregar un nuevo alimento
-app.post("/alimentos", (req, res) => {
-  const {
-    a_nombre,
-    a_cantidad,
-    a_stock,
-    a_fechaSalida,
-    a_fechaEntrada,
-    a_fechaCaducidad,
-    um_id,
-    m_id,
-  } = req.body;
-  if (m_id === 0) {
-    connection.query(
-      "INSERT INTO Alimento (a_nombre, a_cantidad, a_stock, a_fechaSalida, a_fechaEntrada, a_fechaCaducidad, um_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
-      [
-        a_nombre,
-        a_cantidad,
-        a_stock,
-        a_fechaSalida,
-        a_fechaEntrada,
-        a_fechaCaducidad,
-        um_id,
-      ],
-      (err, result) => {
-        if (err) {
-          console.error("Error al insertar alimento:", err);
-          return res.status(500).send("Error de servidor");
-        }
-        res.status(201).send("Alimento agregado correctamente");
-      }
-    );
-  } else {
-    connection.query(
-      "INSERT INTO Alimento (a_nombre, a_cantidad, a_stock, a_fechaSalida, a_fechaEntrada, a_fechaCaducidad, um_id, m_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-      [
-        a_nombre,
-        a_cantidad,
-        a_stock,
-        a_fechaSalida,
-        a_fechaEntrada,
-        a_fechaCaducidad,
-        um_id,
-        m_id,
-      ],
-      (err, result) => {
-        if (err) {
-          console.error("Error al insertar alimento:", err);
-          return res.status(500).send("Error de servidor");
-        }
-        res.status(201).send("Alimento agregado correctamente");
-      }
-    );
-  }
-});
-
-// Actualizar un alimento por ID
-app.put("/alimentos/:id", (req, res) => {
-  const { id } = req.params;
-  const {
-    a_nombre,
-    a_cantidad,
-    a_stock,
-    a_fechaSalida,
-    a_fechaEntrada,
-    a_fechaCaducidad,
-    um_id,
-    m_id,
-  } = req.body;
-  connection.query(
-    "UPDATE Alimento SET a_nombre = ?, a_cantidad = ?, a_stock = ?, a_fechaSalida = ?, a_fechaEntrada = ?, a_fechaCaducidad = ?, um_id = ?, m_id = ? WHERE a_id = ?",
-    [
-      a_nombre,
-      a_cantidad,
-      a_stock,
-      a_fechaSalida,
-      a_fechaEntrada,
-      a_fechaCaducidad,
-      um_id,
-      m_id,
-      id,
-    ],
-    (err, result) => {
-      if (err) {
-        console.error("Error al actualizar alimento:", err);
-        return res.status(500).send("Error de servidor");
-      }
-      res.status(200).send("Alimento actualizado correctamente");
-    }
-  );
-});
-
-// Eliminar un alimento por ID
-app.delete("/alimentos/:id", (req, res) => {
-  const { id } = req.params;
-  connection.query(
-    "DELETE FROM Alimento WHERE a_id = ?",
-    [id],
-    (err, result) => {
-      if (err) {
-        console.error("Error al eliminar alimento:", err);
-        return res.status(500).send("Error de servidor");
-      }
-      res.status(200).send("Alimento eliminado correctamente");
-    }
-  );
-});
-
 //mostrar solo alimentos caducados sin orden
 
 app.get("/alimentos/caducados", (req, res) => {
@@ -959,6 +858,135 @@ app.get("/alimentos/count/nodisponibles", (req, res) => {
         return res.status(500).send("Error de servidor");
       }
       res.json(rows[0]);
+    }
+  );
+});
+
+//-----------------------------------------------------------------------------------------------------------------------
+
+// Obtener un alimento por ID
+app.get("/alimentos/:id", (req, res) => {
+  const { id } = req.params;
+  connection.query(
+    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_id = ?",
+    [id],
+    (err, rows) => {
+      if (err) {
+        console.error("Error de consulta:", err);
+        return res.status(500).send("Error de servidor");
+      }
+      if (rows.length === 0) {
+        return res.status(404).send("Alimento no encontrado");
+      }
+      res.json(rows[0]);
+    }
+  );
+});
+
+// Agregar un nuevo alimento
+app.post("/alimentos", (req, res) => {
+  const {
+    a_nombre,
+    a_cantidad,
+    a_stock,
+    a_fechaSalida,
+    a_fechaEntrada,
+    a_fechaCaducidad,
+    um_id,
+    m_id,
+  } = req.body;
+  if (m_id === 0) {
+    connection.query(
+      "INSERT INTO Alimento (a_nombre, a_cantidad, a_stock, a_fechaSalida, a_fechaEntrada, a_fechaCaducidad, um_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      [
+        a_nombre,
+        a_cantidad,
+        a_stock,
+        a_fechaSalida,
+        a_fechaEntrada,
+        a_fechaCaducidad,
+        um_id,
+      ],
+      (err, result) => {
+        if (err) {
+          console.error("Error al insertar alimento:", err);
+          return res.status(500).send("Error de servidor");
+        }
+        res.status(201).send("Alimento agregado correctamente");
+      }
+    );
+  } else {
+    connection.query(
+      "INSERT INTO Alimento (a_nombre, a_cantidad, a_stock, a_fechaSalida, a_fechaEntrada, a_fechaCaducidad, um_id, m_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      [
+        a_nombre,
+        a_cantidad,
+        a_stock,
+        a_fechaSalida,
+        a_fechaEntrada,
+        a_fechaCaducidad,
+        um_id,
+        m_id,
+      ],
+      (err, result) => {
+        if (err) {
+          console.error("Error al insertar alimento:", err);
+          return res.status(500).send("Error de servidor");
+        }
+        res.status(201).send("Alimento agregado correctamente");
+      }
+    );
+  }
+});
+
+// Actualizar un alimento por ID
+app.put("/alimentos/:id", (req, res) => {
+  const { id } = req.params;
+  const {
+    a_nombre,
+    a_cantidad,
+    a_stock,
+    a_fechaSalida,
+    a_fechaEntrada,
+    a_fechaCaducidad,
+    um_id,
+    m_id,
+  } = req.body;
+  connection.query(
+    "UPDATE Alimento SET a_nombre = ?, a_cantidad = ?, a_stock = ?, a_fechaSalida = ?, a_fechaEntrada = ?, a_fechaCaducidad = ?, um_id = ?, m_id = ? WHERE a_id = ?",
+    [
+      a_nombre,
+      a_cantidad,
+      a_stock,
+      a_fechaSalida,
+      a_fechaEntrada,
+      a_fechaCaducidad,
+      um_id,
+      m_id,
+      id,
+    ],
+    (err, result) => {
+      if (err) {
+        console.error("Error al actualizar alimento:", err);
+        return res.status(500).send("Error de servidor");
+      }
+      res.status(200).send("Alimento actualizado correctamente");
+    }
+  );
+});
+
+// Eliminar un alimento por ID
+app.delete("/alimentos/:id", (req, res) => {
+  const { id } = req.params;
+  connection.query(
+    "DELETE FROM Alimento WHERE a_id = ?",
+    [id],
+    (err, result) => {
+      if (err) {
+        console.error("Error al eliminar alimento:", err);
+        return res.status(500).send("Error de servidor");
+      }
+      res.status(200).send("Alimento eliminado correctamente");
     }
   );
 });
