@@ -3,7 +3,6 @@ import bodyParser from "body-parser";
 import session from "express-session";
 import { connection } from "./db.js";
 import crypto from "crypto";
-import mysqlSession from "express-mysql-session";
 
 const app = express();
 
@@ -15,19 +14,6 @@ app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Credentials", "true");
   next();
 });
-
-const MySQLStore = mysqlSession(session);
-const sessionStore = new MySQLStore({}, connection);
-
-app.use(
-  session({
-    key: "user_cookie",
-    secret: "12345",
-    store: sessionStore,
-    resave: false,
-    saveUninitialized: false,
-  })
-);
 
 // Middleware para analizar el cuerpo de las solicitudes como JSON
 app.use(bodyParser.json());
@@ -42,53 +28,54 @@ app.get("/", (req, res) => {
   });
 });
 
+app.use(
+  session({
+    secret: '12345',
+    resave: false,
+    saveUninitialized: true
+  })
+);
+
 app.post("/login", (req, res) => {
   const { id, password } = req.body;
 
   // Verificar el usuario en la base de datos
-  connection.query(
-    "SELECT * FROM Usuario WHERE u_id = ?",
-    [id],
-    (err, rows) => {
-      if (err) {
-        console.error("Error de consulta:", err);
-        return res.status(500).send("Error de servidor");
-      }
-      if (rows.length === 0) {
-        return res.status(401).send("Usuario incorrecto");
-      }
-
-      const userData = rows[0];
-      const hashedPassword = crypto
-        .createHash("sha256")
-        .update(password)
-        .digest("hex");
-
-      if (userData.u_contraseña === hashedPassword) {
-        // Establecer la sesión del usuario
-        req.session.userId = userData.u_id;
-        res.sendStatus(200);
-      } else {
-        res.status(401).send("Contraseña incorrecta");
-      }
+  connection.query("SELECT * FROM Usuario WHERE u_id = ?", [id], (err, rows) => {
+    if (err) {
+      console.error("Error de consulta:", err);
+      return res.status(500).send("Error de servidor");
     }
-  );
+    if (rows.length === 0) {
+      return res.status(401).send("Usuario incorrecto");
+    }
+
+    const userData = rows[0];
+    const hashedPassword = crypto.createHash('sha256').update(password).digest('hex');
+
+    if (userData.u_contraseña === hashedPassword) {
+      // Establecer la sesión del usuario
+      req.session.userId = userData.u_id;
+      res.sendStatus(200);
+    } else {
+      res.status(401).send("Contraseña incorrecta");
+    }
+  });
 });
 
 // Guardar informacion en la sesion
 app.post("/saveMessage", (req, res) => {
-  const { message } = req.body;
-  req.session.message = message;
-  const message2 = req.session.message;
+  const { message } = req.body; 
+  req.session.message = message; 
+  const message2 = req.session.message; 
   console.log("Mensaje obtenido de la sesión:", message2);
   res.sendStatus(200);
 });
 
 // Obtener informacion de la sesion
 app.get("/getMessage", (req, res) => {
-  const message = req.session.message || "";
+  const message = req.session.message || ''; 
   console.log("Mensaje obtenido de la sesión:", message);
-  res.json(message);
+  res.send(message);
 });
 
 // Ruta para verificar si el usuario está conectado y devolver sus detalles
@@ -96,23 +83,19 @@ app.get("/checkUser", (req, res) => {
   // Verificar si hay una sesión activa
   if (req.session.userId) {
     // Si hay una sesión activa, buscar los detalles del usuario en la base de datos
-    connection.query(
-      "SELECT * FROM Usuario WHERE u_id = ?",
-      [req.session.userId],
-      (err, rows) => {
-        if (err) {
-          console.error("Error de consulta:", err);
-          return res.status(500).send("Error de servidor");
-        }
-        if (rows.length === 0) {
-          return res.status(401).send("Usuario no encontrado");
-        }
-
-        const userData = rows[0];
-        // Devolver los detalles del usuario
-        res.json(userData);
+    connection.query("SELECT * FROM Usuario WHERE u_id = ?", [req.session.userId], (err, rows) => {
+      if (err) {
+        console.error("Error de consulta:", err);
+        return res.status(500).send("Error de servidor");
       }
-    );
+      if (rows.length === 0) {
+        return res.status(401).send("Usuario no encontrado");
+      }
+
+      const userData = rows[0];
+      // Devolver los detalles del usuario
+      res.json(userData);
+    });
   } else {
     // Si no hay sesión activa, devolver un error
     res.status(401).send("Usuario no conectado");
@@ -164,7 +147,7 @@ app.get("/alimentos/checkDate", (req, res) => {
 
   const placeholders = ids.map((_, i) => "?").join(",");
   connection.query(
-    `SELECT a.*, (SELECT m_nombre FROM Marca m WHERE m.m_id = a.m_id) AS marca_nombre FROM Alimento a WHERE a.a_id IN (${placeholders})`,
+    `SELECT a.*, (SELECT m_nombre FROM Marca m WHERE m.m_id = a.m_id) AS marca_nombre FROM Alimento a WHERE a.a_id IN (${placeholders});`,
     ids,
     (err, rows) => {
       if (err) {
@@ -615,239 +598,6 @@ app.get("/alimentos/nodisponibles/alfaB", (req, res) => {
     }
   );
 });
-
-//mostrar solo alimentos caducados sin orden
-
-app.get("/alimentos/caducados", (req, res) => {
-  const page = parseInt(req.query.page) || 1; // Página actual
-  const pageSize = parseInt(req.query.pageSize) || 10; // Tamaño de la página
-  const offset = (page - 1) * pageSize; // Desplazamiento
-  connection.query(
-    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_fechaCaducidad < NOW() LIMIT ?, ?",
-    [offset, pageSize],
-    (err, rows) => {
-      if (err) {
-        console.error("Error de consulta:", err);
-        return res.status(500).send("Error de servidor");
-      }
-      res.json(rows);
-    }
-  );
-});
-
-//mostrar solo alimentos por caducar sin orden
-
-app.get("/alimentos/proximoscaducados", (req, res) => {
-  const page = parseInt(req.query.page) || 1; // Página actual
-  const pageSize = parseInt(req.query.pageSize) || 10; // Tamaño de la página
-  const offset = (page - 1) * pageSize; // Desplazamiento
-  connection.query(
-    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_fechaCaducidad < DATE_ADD(NOW(), INTERVAL 1 MONTH) AND a_fechaCaducidad > NOW() LIMIT ?, ?",
-    [offset, pageSize],
-    (err, rows) => {
-      if (err) {
-        console.error("Error de consulta:", err);
-        return res.status(500).send("Error de servidor");
-      }
-      res.json(rows);
-    }
-  );
-});
-
-//mostrar solo alimentos con disponibilidad sin orden
-
-app.get("/alimentos/disponibles", (req, res) => {
-  const page = parseInt(req.query.page) || 1; // Página actual
-  const pageSize = parseInt(req.query.pageSize) || 10; // Tamaño de la página
-  const offset = (page - 1) * pageSize; // Desplazamiento
-  connection.query(
-    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_stock > 0 LIMIT ?, ?",
-    [offset, pageSize],
-    (err, rows) => {
-      if (err) {
-        console.error("Error de consulta:", err);
-        return res.status(500).send("Error de servidor");
-      }
-      res.json(rows);
-    }
-  );
-});
-
-//mostrar solo alimentos sin disponibilidad sin orden
-
-app.get("/alimentos/nodisponibles", (req, res) => {
-  const page = parseInt(req.query.page) || 1; // Página actual
-  const pageSize = parseInt(req.query.pageSize) || 10; // Tamaño de la página
-  const offset = (page - 1) * pageSize; // Desplazamiento
-  connection.query(
-    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_stock = 0 LIMIT ?, ?",
-    [offset, pageSize],
-    (err, rows) => {
-      if (err) {
-        console.error("Error de consulta:", err);
-        return res.status(500).send("Error de servidor");
-      }
-      res.json(rows);
-    }
-  );
-});
-
-//mostrar todos los alimentos alimentos ordenados por dCad
-
-app.get("/alimentos/ordenados/dCad", (req, res) => {
-  const page = parseInt(req.query.page) || 1; // Página actual
-  const pageSize = parseInt(req.query.pageSize) || 10; // Tamaño de la página
-  const offset = (page - 1) * pageSize; // Desplazamiento
-  connection.query(
-    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida ORDER BY a_fechaCaducidad LIMIT ?, ?",
-    [offset, pageSize],
-    (err, rows) => {
-      if (err) {
-        console.error("Error de consulta:", err);
-        return res.status(500).send("Error de servidor");
-      }
-      res.json(rows);
-    }
-  );
-});
-
-//mostrar todos los alimentos alimentos ordenados por uCad
-
-app.get("/alimentos/ordenados/uCad", (req, res) => {
-  const page = parseInt(req.query.page) || 1; // Página actual
-  const pageSize = parseInt(req.query.pageSize) || 10; // Tamaño de la página
-  const offset = (page - 1) * pageSize; // Desplazamiento
-  connection.query(
-    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida ORDER BY a_fechaCaducidad DESC LIMIT ?, ?",
-    [offset, pageSize],
-    (err, rows) => {
-      if (err) {
-        console.error("Error de consulta:", err);
-        return res.status(500).send("Error de servidor");
-      }
-      res.json(rows);
-    }
-  );
-});
-
-//mostrar todos los alimentos alimentos ordenados por dEnt
-
-app.get("/alimentos/ordenados/dEnt", (req, res) => {
-  const page = parseInt(req.query.page) || 1; // Página actual
-  const pageSize = parseInt(req.query.pageSize) || 10; // Tamaño de la página
-  const offset = (page - 1) * pageSize; // Desplazamiento
-  connection.query(
-    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida ORDER BY a_fechaEntrada LIMIT ?, ?",
-    [offset, pageSize],
-    (err, rows) => {
-      if (err) {
-        console.error("Error de consulta:", err);
-        return res.status(500).send("Error de servidor");
-      }
-      res.json(rows);
-    }
-  );
-});
-
-//mostrar todos los alimentos alimentos ordenados por uEnt
-
-app.get("/alimentos/ordenados/uEnt", (req, res) => {
-  const page = parseInt(req.query.page) || 1; // Página actual
-  const pageSize = parseInt(req.query.pageSize) || 10; // Tamaño de la página
-  const offset = (page - 1) * pageSize; // Desplazamiento
-  connection.query(
-    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida ORDER BY a_fechaEntrada DESC LIMIT ?, ?",
-    [offset, pageSize],
-    (err, rows) => {
-      if (err) {
-        console.error("Error de consulta:", err);
-        return res.status(500).send("Error de servidor");
-      }
-      res.json(rows);
-    }
-  );
-});
-
-// mostrar todos los alimentos alimentos ordenados por alfaB
-
-app.get("/alimentos/ordenados/alfaB", (req, res) => {
-  const page = parseInt(req.query.page) || 1; // Página actual
-  const pageSize = parseInt(req.query.pageSize) || 10; // Tamaño de la página
-  const offset = (page - 1) * pageSize; // Desplazamiento
-  connection.query(
-    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida ORDER BY a_nombre LIMIT ?, ?",
-    [offset, pageSize],
-    (err, rows) => {
-      if (err) {
-        console.error("Error de consulta:", err);
-        return res.status(500).send("Error de servidor");
-      }
-      res.json(rows);
-    }
-  );
-});
-
-//count para alimentos caducados
-
-app.get("/alimentos/count/caducados", (req, res) => {
-  connection.query(
-    "SELECT COUNT(*) AS total FROM Alimento WHERE a_fechaCaducidad < NOW()",
-    (err, rows) => {
-      if (err) {
-        console.error("Error de consulta:", err);
-        return res.status(500).send("Error de servidor");
-      }
-      res.json(rows[0]);
-    }
-  );
-});
-
-//count para alimentos por caducar
-
-app.get("/alimentos/count/proximoscaducados", (req, res) => {
-  connection.query(
-    "SELECT COUNT(*) AS total FROM Alimento WHERE a_fechaCaducidad < DATE_ADD(NOW(), INTERVAL 1 MONTH) AND a_fechaCaducidad > NOW()",
-    (err, rows) => {
-      if (err) {
-        console.error("Error de consulta:", err);
-        return res.status(500).send("Error de servidor");
-      }
-      res.json(rows[0]);
-    }
-  );
-});
-
-//count para alimentos con disponibilidad
-
-app.get("/alimentos/count/disponibles", (req, res) => {
-  connection.query(
-    "SELECT COUNT(*) AS total FROM Alimento WHERE a_stock > 0",
-    (err, rows) => {
-      if (err) {
-        console.error("Error de consulta:", err);
-        return res.status(500).send("Error de servidor");
-      }
-      res.json(rows[0]);
-    }
-  );
-});
-
-//count para alimentos sin disponibilidad
-
-app.get("/alimentos/count/nodisponibles", (req, res) => {
-  connection.query(
-    "SELECT COUNT(*) AS total FROM Alimento WHERE a_stock = 0",
-    (err, rows) => {
-      if (err) {
-        console.error("Error de consulta:", err);
-        return res.status(500).send("Error de servidor");
-      }
-      res.json(rows[0]);
-    }
-  );
-});
-
-//-----------------------------------------------------------------------------------------------------------------------
 
 // Obtener un alimento por ID
 app.get("/alimentos/:id", (req, res) => {
