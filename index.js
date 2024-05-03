@@ -66,6 +66,8 @@ app.post("/login", (req, res) => {
 app.post("/saveMessage", (req, res) => {
   const { message } = req.body; 
   req.session.message = message; 
+  const message2 = req.session.message; 
+  console.log("Mensaje obtenido de la sesión:", message2);
   res.sendStatus(200);
 });
 
