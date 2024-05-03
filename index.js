@@ -1,35 +1,17 @@
 import express from "express";
 import bodyParser from "body-parser";
+import session from "express-session";
 import { connection } from "./db.js";
 import crypto from "crypto";
-import jwt from "jsonwebtoken";
 
 const app = express();
-
-// Middleware para verificar el token JWT en las solicitudes protegidas
-const authenticateToken = (req, res, next) => {
-  const authHeader = req.headers["authorization"];
-  const token = authHeader && authHeader.split(" ")[1];
-  if (token == null) return res.sendStatus(401); // No hay token
-
-  jwt.verify(token, "secreto", (err, user) => {
-    if (err) return res.sendStatus(403); // Token inválido
-    req.user = user;
-    next();
-  });
-};
-
-// Ruta protegida que requiere autenticación
-app.get("/rutaProtegida", authenticateToken, (req, res) => {
-  // Acceso autorizado
-  res.json({ message: "Acceso autorizado" });
-});
 
 // Middleware para permitir solicitudes desde localhost:5173
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "http://localhost:5173");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.setHeader("Access-Control-Allow-Credentials", "true");
   next();
 });
 
@@ -44,6 +26,56 @@ app.get("/", (req, res) => {
     }
     res.json(rows);
   });
+});
+
+app.use(
+  session({
+    secret: '12345',
+    resave: false,
+    saveUninitialized: true
+  })
+);
+
+app.post("/login", (req, res) => {
+  const { id, password } = req.body;
+
+  // Verificar el usuario en la base de datos
+  connection.query("SELECT * FROM Usuario WHERE u_id = ?", [id], (err, rows) => {
+    if (err) {
+      console.error("Error de consulta:", err);
+      return res.status(500).send("Error de servidor");
+    }
+    if (rows.length === 0) {
+      return res.status(401).send("Usuario incorrecto");
+    }
+
+    const userData = rows[0];
+    const hashedPassword = crypto.createHash('sha256').update(password).digest('hex');
+
+    if (userData.u_contraseña === hashedPassword) {
+      // Establecer la sesión del usuario
+      req.session.userId = userData.u_id;
+      res.sendStatus(200);
+    } else {
+      res.status(401).send("Contraseña incorrecta");
+    }
+  });
+});
+
+// Guardar informacion en la sesion
+app.post("/saveMessage", (req, res) => {
+  const { message } = req.body; 
+  req.session.message = message; 
+  const message2 = req.session.message; 
+  console.log("Mensaje obtenido de la sesión:", message2);
+  res.sendStatus(200);
+});
+
+// Obtener informacion de la sesion
+app.get("/getMessage", (req, res) => {
+  const message = req.session.message || ''; 
+  console.log("Mensaje obtenido de la sesión:", message);
+  res.send(message);
 });
 
 //-------------------------------------------------------------------------------------------------------
@@ -91,7 +123,7 @@ app.get("/alimentos/checkDate", (req, res) => {
 
   const placeholders = ids.map((_, i) => "?").join(",");
   connection.query(
-    `SELECT a_id, a_nombre, a_cantidad, um_id, m_id FROM Alimento WHERE a_id IN (${placeholders})`,
+    `SELECT * FROM Alimento WHERE a_id IN (${placeholders})`,
     ids,
     (err, rows) => {
       if (err) {
