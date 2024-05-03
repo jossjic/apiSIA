@@ -732,6 +732,237 @@ app.delete("/alimentos/:id", (req, res) => {
   );
 });
 
+//mostrar solo alimentos caducados sin orden
+
+app.get("/alimentos/caducados", (req, res) => {
+  const page = parseInt(req.query.page) || 1; // Página actual
+  const pageSize = parseInt(req.query.pageSize) || 10; // Tamaño de la página
+  const offset = (page - 1) * pageSize; // Desplazamiento
+  connection.query(
+    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_fechaCaducidad < NOW() LIMIT ?, ?",
+    [offset, pageSize],
+    (err, rows) => {
+      if (err) {
+        console.error("Error de consulta:", err);
+        return res.status(500).send("Error de servidor");
+      }
+      res.json(rows);
+    }
+  );
+});
+
+//mostrar solo alimentos por caducar sin orden
+
+app.get("/alimentos/proximoscaducados", (req, res) => {
+  const page = parseInt(req.query.page) || 1; // Página actual
+  const pageSize = parseInt(req.query.pageSize) || 10; // Tamaño de la página
+  const offset = (page - 1) * pageSize; // Desplazamiento
+  connection.query(
+    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_fechaCaducidad < DATE_ADD(NOW(), INTERVAL 1 MONTH) AND a_fechaCaducidad > NOW() LIMIT ?, ?",
+    [offset, pageSize],
+    (err, rows) => {
+      if (err) {
+        console.error("Error de consulta:", err);
+        return res.status(500).send("Error de servidor");
+      }
+      res.json(rows);
+    }
+  );
+});
+
+//mostrar solo alimentos con disponibilidad sin orden
+
+app.get("/alimentos/disponibles", (req, res) => {
+  const page = parseInt(req.query.page) || 1; // Página actual
+  const pageSize = parseInt(req.query.pageSize) || 10; // Tamaño de la página
+  const offset = (page - 1) * pageSize; // Desplazamiento
+  connection.query(
+    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_stock > 0 LIMIT ?, ?",
+    [offset, pageSize],
+    (err, rows) => {
+      if (err) {
+        console.error("Error de consulta:", err);
+        return res.status(500).send("Error de servidor");
+      }
+      res.json(rows);
+    }
+  );
+});
+
+//mostrar solo alimentos sin disponibilidad sin orden
+
+app.get("/alimentos/nodisponibles", (req, res) => {
+  const page = parseInt(req.query.page) || 1; // Página actual
+  const pageSize = parseInt(req.query.pageSize) || 10; // Tamaño de la página
+  const offset = (page - 1) * pageSize; // Desplazamiento
+  connection.query(
+    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_stock = 0 LIMIT ?, ?",
+    [offset, pageSize],
+    (err, rows) => {
+      if (err) {
+        console.error("Error de consulta:", err);
+        return res.status(500).send("Error de servidor");
+      }
+      res.json(rows);
+    }
+  );
+});
+
+//mostrar todos los alimentos alimentos ordenados por dCad
+
+app.get("/alimentos/ordenados/dCad", (req, res) => {
+  const page = parseInt(req.query.page) || 1; // Página actual
+  const pageSize = parseInt(req.query.pageSize) || 10; // Tamaño de la página
+  const offset = (page - 1) * pageSize; // Desplazamiento
+  connection.query(
+    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida ORDER BY a_fechaCaducidad LIMIT ?, ?",
+    [offset, pageSize],
+    (err, rows) => {
+      if (err) {
+        console.error("Error de consulta:", err);
+        return res.status(500).send("Error de servidor");
+      }
+      res.json(rows);
+    }
+  );
+});
+
+//mostrar todos los alimentos alimentos ordenados por uCad
+
+app.get("/alimentos/ordenados/uCad", (req, res) => {
+  const page = parseInt(req.query.page) || 1; // Página actual
+  const pageSize = parseInt(req.query.pageSize) || 10; // Tamaño de la página
+  const offset = (page - 1) * pageSize; // Desplazamiento
+  connection.query(
+    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida ORDER BY a_fechaCaducidad DESC LIMIT ?, ?",
+    [offset, pageSize],
+    (err, rows) => {
+      if (err) {
+        console.error("Error de consulta:", err);
+        return res.status(500).send("Error de servidor");
+      }
+      res.json(rows);
+    }
+  );
+});
+
+//mostrar todos los alimentos alimentos ordenados por dEnt
+
+app.get("/alimentos/ordenados/dEnt", (req, res) => {
+  const page = parseInt(req.query.page) || 1; // Página actual
+  const pageSize = parseInt(req.query.pageSize) || 10; // Tamaño de la página
+  const offset = (page - 1) * pageSize; // Desplazamiento
+  connection.query(
+    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida ORDER BY a_fechaEntrada LIMIT ?, ?",
+    [offset, pageSize],
+    (err, rows) => {
+      if (err) {
+        console.error("Error de consulta:", err);
+        return res.status(500).send("Error de servidor");
+      }
+      res.json(rows);
+    }
+  );
+});
+
+//mostrar todos los alimentos alimentos ordenados por uEnt
+
+app.get("/alimentos/ordenados/uEnt", (req, res) => {
+  const page = parseInt(req.query.page) || 1; // Página actual
+  const pageSize = parseInt(req.query.pageSize) || 10; // Tamaño de la página
+  const offset = (page - 1) * pageSize; // Desplazamiento
+  connection.query(
+    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida ORDER BY a_fechaEntrada DESC LIMIT ?, ?",
+    [offset, pageSize],
+    (err, rows) => {
+      if (err) {
+        console.error("Error de consulta:", err);
+        return res.status(500).send("Error de servidor");
+      }
+      res.json(rows);
+    }
+  );
+});
+
+// mostrar todos los alimentos alimentos ordenados por alfaB
+
+app.get("/alimentos/ordenados/alfaB", (req, res) => {
+  const page = parseInt(req.query.page) || 1; // Página actual
+  const pageSize = parseInt(req.query.pageSize) || 10; // Tamaño de la página
+  const offset = (page - 1) * pageSize; // Desplazamiento
+  connection.query(
+    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida ORDER BY a_nombre LIMIT ?, ?",
+    [offset, pageSize],
+    (err, rows) => {
+      if (err) {
+        console.error("Error de consulta:", err);
+        return res.status(500).send("Error de servidor");
+      }
+      res.json(rows);
+    }
+  );
+});
+
+//count para alimentos caducados
+
+app.get("/alimentos/count/caducados", (req, res) => {
+  connection.query(
+    "SELECT COUNT(*) AS total FROM Alimento WHERE a_fechaCaducidad < NOW()",
+    (err, rows) => {
+      if (err) {
+        console.error("Error de consulta:", err);
+        return res.status(500).send("Error de servidor");
+      }
+      res.json(rows[0]);
+    }
+  );
+});
+
+//count para alimentos por caducar
+
+app.get("/alimentos/count/proximoscaducados", (req, res) => {
+  connection.query(
+    "SELECT COUNT(*) AS total FROM Alimento WHERE a_fechaCaducidad < DATE_ADD(NOW(), INTERVAL 1 MONTH) AND a_fechaCaducidad > NOW()",
+    (err, rows) => {
+      if (err) {
+        console.error("Error de consulta:", err);
+        return res.status(500).send("Error de servidor");
+      }
+      res.json(rows[0]);
+    }
+  );
+});
+
+//count para alimentos con disponibilidad
+
+app.get("/alimentos/count/disponibles", (req, res) => {
+  connection.query(
+    "SELECT COUNT(*) AS total FROM Alimento WHERE a_stock > 0",
+    (err, rows) => {
+      if (err) {
+        console.error("Error de consulta:", err);
+        return res.status(500).send("Error de servidor");
+      }
+      res.json(rows[0]);
+    }
+  );
+});
+
+//count para alimentos sin disponibilidad
+
+app.get("/alimentos/count/nodisponibles", (req, res) => {
+  connection.query(
+    "SELECT COUNT(*) AS total FROM Alimento WHERE a_stock = 0",
+    (err, rows) => {
+      if (err) {
+        console.error("Error de consulta:", err);
+        return res.status(500).send("Error de servidor");
+      }
+      res.json(rows[0]);
+    }
+  );
+});
+
 //-----------------------------------------------------------------------------------------------------------------------
 
 // Obtener todos los usuarios
