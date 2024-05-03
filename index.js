@@ -72,6 +72,7 @@ app.post("/saveMessage", (req, res) => {
 // Obtener informacion de la sesion
 app.get("/getMessage", (req, res) => {
   const message = req.session.message || ''; 
+  console.log("Mensaje obtenido de la sesión:", message);
   res.send(message);
 });
 
