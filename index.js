@@ -787,6 +787,66 @@ app.get("/alimentos/ordenados/alfaB", (req, res) => {
   );
 });
 
+//count para alimentos caducados
+
+app.get("/alimentos/count/caducados", (req, res) => {
+  connection.query(
+    "SELECT COUNT(*) AS total FROM Alimento WHERE a_fechaCaducidad < NOW()",
+    (err, rows) => {
+      if (err) {
+        console.error("Error de consulta:", err);
+        return res.status(500).send("Error de servidor");
+      }
+      res.json(rows[0]);
+    }
+  );
+});
+
+//count para alimentos por caducar
+
+app.get("/alimentos/count/proximoscaducados", (req, res) => {
+  connection.query(
+    "SELECT COUNT(*) AS total FROM Alimento WHERE a_fechaCaducidad < DATE_ADD(NOW(), INTERVAL 1 MONTH) AND a_fechaCaducidad > NOW()",
+    (err, rows) => {
+      if (err) {
+        console.error("Error de consulta:", err);
+        return res.status(500).send("Error de servidor");
+      }
+      res.json(rows[0]);
+    }
+  );
+});
+
+//count para alimentos con disponibilidad
+
+app.get("/alimentos/count/disponibles", (req, res) => {
+  connection.query(
+    "SELECT COUNT(*) AS total FROM Alimento WHERE a_stock > 0",
+    (err, rows) => {
+      if (err) {
+        console.error("Error de consulta:", err);
+        return res.status(500).send("Error de servidor");
+      }
+      res.json(rows[0]);
+    }
+  );
+});
+
+//count para alimentos sin disponibilidad
+
+app.get("/alimentos/count/nodisponibles", (req, res) => {
+  connection.query(
+    "SELECT COUNT(*) AS total FROM Alimento WHERE a_stock = 0",
+    (err, rows) => {
+      if (err) {
+        console.error("Error de consulta:", err);
+        return res.status(500).send("Error de servidor");
+      }
+      res.json(rows[0]);
+    }
+  );
+});
+
 //-----------------------------------------------------------------------------------------------------------------------
 
 // Obtener un alimento por ID
