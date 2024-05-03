@@ -75,37 +75,22 @@ app.post("/login", (req, res) => {
   );
 });
 
-// Guardar información en la sesión
+// Guardar informacion en la sesion
 app.post("/saveMessage", (req, res) => {
   const { message } = req.body;
-  const userId = req.session.userId; // Supongo que guardas el userId en la sesión
-  const sql = `UPDATE sessions SET data = JSON_SET(data, '$.message', ?) WHERE userId = ?`;
-  db.query(sql, [message, userId], (err, result) => {
-    if (err) {
-      console.error("Error al guardar el mensaje en la sesión:", err);
-      res.sendStatus(500);
-    } else {
-      console.log("Mensaje guardado en la sesión:", message);
-      res.sendStatus(200);
-    }
-  });
+  req.session.message = message;
+  const message2 = req.session.message;
+  console.log("Mensaje obtenido de la sesión:", message2);
+  res.sendStatus(200);
 });
 
-// Obtener información de la sesión
+// Obtener informacion de la sesion
 app.get("/getMessage", (req, res) => {
-  const userId = req.session.userId; // Supongo que guardas el userId en la sesión
-  const sql = `SELECT JSON_UNQUOTE(JSON_EXTRACT(data, '$.message')) AS message FROM sessions WHERE userId = ?`;
-  db.query(sql, [userId], (err, result) => {
-    if (err) {
-      console.error("Error al obtener el mensaje de la sesión:", err);
-      res.sendStatus(500);
-    } else {
-      const message = result[0] ? result[0].message : ""; // Si no hay mensaje, devuelve una cadena vacía
-      console.log("Mensaje obtenido de la sesión:", message);
-      res.json(message);
-    }
-  });
+  const message = req.session.message || "";
+  console.log("Mensaje obtenido de la sesión:", message);
+  res.json(message);
 });
+
 // Ruta para verificar si el usuario está conectado y devolver sus detalles
 app.get("/checkUser", (req, res) => {
   // Verificar si hay una sesión activa
