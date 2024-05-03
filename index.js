@@ -3,6 +3,7 @@ import bodyParser from "body-parser";
 import session from "express-session";
 import { connection } from "./db.js";
 import crypto from "crypto";
+import mysqlSession from "express-mysql-session";
 
 const app = express();
 
@@ -15,11 +16,16 @@ app.use((req, res, next) => {
   next();
 });
 
+const MySQLStore = mysqlSession(session);
+const sessionStore = new MySQLStore({}, connection);
+
 app.use(
   session({
+    key: "user_cookie",
     secret: '12345',
-    resave: true,
-    saveUninitialized: true
+    store: sessionStore,
+    resave: false,
+    saveUninitialized: false
   })
 );
 
