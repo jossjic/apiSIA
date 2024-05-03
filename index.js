@@ -76,7 +76,7 @@ app.post("/saveMessage", (req, res) => {
 app.get("/getMessage", (req, res) => {
   const message = req.session.message || ''; 
   console.log("Mensaje obtenido de la sesión:", message);
-  res.send(message);
+  res.json(message);
 });
 
 // Ruta para verificar si el usuario está conectado y devolver sus detalles
