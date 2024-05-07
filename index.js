@@ -75,6 +75,15 @@ app.post("/login", (req, res) => {
   );
 });
 
+//Validar sesion
+app.use('/validate', function(req, res){
+  if (req.session.userId){
+    res.sendStatus(200);
+  } else {
+    res.sendStatus(400);
+  }
+});
+
 // Guardar informacion en la sesion
 app.post("/saveMessage", (req, res) => {
   const { message } = req.body;
