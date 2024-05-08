@@ -1082,7 +1082,7 @@ app.get("/alimentos/busqueda/cantidad/:cantidad", (req, res) => {
   // Consulta para obtener los datos de los alimentos
   connection.query(
     "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_cantidad LIKE ? AND um_id LIKE ? LIMIT ?, ?",
-    ["%" + cantidad + "%", "%" + um_id + "%", offset, pageSize],
+    [cantidad, um_id, offset, pageSize],
     (err, alimentos) => {
       if (err) {
         console.error("Error de consulta:", err);
@@ -1122,7 +1122,7 @@ app.get("/alimentos/busqueda/stock/:stock", (req, res) => {
   // Consulta para obtener los datos de los alimentos
   connection.query(
     "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_stock LIKE ? LIMIT ?, ?",
-    ["%" + stock + "%", offset, pageSize],
+    [stock, offset, pageSize],
     (err, alimentos) => {
       if (err) {
         console.error("Error de consulta:", err);
