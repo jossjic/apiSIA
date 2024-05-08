@@ -1040,7 +1040,7 @@ app.get("/alimentos/busqueda/marca/:marca", (req, res) => {
   connection.query(
     "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE m_nombre LIKE ? LIMIT ?, ?",
     ["%" + marca + "%", offset, pageSize],
-    (err, rows) => {
+    (err, alimentos) => {
       if (err) {
         console.error("Error de consulta:", err);
         return res.status(500).send("Error de servidor");
@@ -1083,7 +1083,7 @@ app.get("/alimentos/busqueda/cantidad/:cantidad", (req, res) => {
   connection.query(
     "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_cantidad LIKE ? AND um_id LIKE ? LIMIT ?, ?",
     ["%" + cantidad + "%", "%" + um_id + "%", offset, pageSize],
-    (err, rows) => {
+    (err, alimentos) => {
       if (err) {
         console.error("Error de consulta:", err);
         return res.status(500).send("Error de servidor");
@@ -1123,7 +1123,7 @@ app.get("/alimentos/busqueda/stock/:stock", (req, res) => {
   connection.query(
     "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_stock LIKE ? LIMIT ?, ?",
     ["%" + stock + "%", offset, pageSize],
-    (err, rows) => {
+    (err, alimentos) => {
       if (err) {
         console.error("Error de consulta:", err);
         return res.status(500).send("Error de servidor");
@@ -1165,7 +1165,7 @@ app.get("/alimentos/busqueda/caducidad/:caducidad", (req, res) => {
   connection.query(
     "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_fechaCaducidad LIKE ? LIMIT ?, ?",
     ["%" + caducidad + "%", offset, pageSize],
-    (err, rows) => {
+    (err, alimentos) => {
       if (err) {
         console.error("Error de consulta:", err);
         return res.status(500).send("Error de servidor");
