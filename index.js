@@ -999,7 +999,7 @@ app.get("/alimentos/busqueda/nombre/:nombre", (req, res) => {
   connection.query(
     "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_nombre LIKE ? LIMIT ?, ?",
     ["%" + nombre + "%", offset, pageSize],
-    (err, rows) => {
+    (err, alimentos) => {
       if (err) {
         console.error("Error de consulta:", err);
         return res.status(500).send("Error de servidor");
@@ -1016,9 +1016,10 @@ app.get("/alimentos/busqueda/nombre/:nombre", (req, res) => {
           }
 
           // Crear un objeto JSON con los datos de los alimentos y el conteo total
+          const total = countResult[0].total;
           const response = {
-            total: countResult[0].total,
-            alimentos: rows,
+            total,
+            alimentos,
           };
 
           res.json(response);
