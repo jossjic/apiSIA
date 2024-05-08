@@ -77,8 +77,8 @@ app.post("/login", (req, res) => {
 });
 
 //Validar sesion
-app.use('/validate', function(req, res){
-  if (req.session.userId){
+app.use("/validate", function (req, res) {
+  if (req.session.userId) {
     res.sendStatus(200);
   } else {
     res.sendStatus(400);
@@ -982,6 +982,94 @@ app.delete("/alimentos/:id", (req, res) => {
         return res.status(500).send("Error de servidor");
       }
       res.status(200).send("Alimento eliminado correctamente");
+    }
+  );
+});
+
+//busqueda de alimentos
+
+//busqueda por nombre
+
+app.get("/alimentos/busqueda/nombre/:nombre", (req, res) => {
+  const { nombre } = req.params;
+  connection.query(
+    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_nombre LIKE ?",
+    ["%" + nombre + "%"],
+    (err, rows) => {
+      if (err) {
+        console.error("Error de consulta:", err);
+        return res.status(500).send("Error de servidor");
+      }
+      res.json(rows);
+    }
+  );
+});
+
+//busqueda por marca
+
+app.get("/alimentos/busqueda/marca/:marca", (req, res) => {
+  const { marca } = req.params;
+  connection.query(
+    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE m_nombre LIKE ?",
+    ["%" + marca + "%"],
+    (err, rows) => {
+      if (err) {
+        console.error("Error de consulta:", err);
+        return res.status(500).send("Error de servidor");
+      }
+      res.json(rows);
+    }
+  );
+});
+
+//busqueda por cantidad (cantidad + unidadmedida)
+
+app.get("/alimentos/busqueda/cantidad/:cantidad", (req, res) => {
+  //split cantidad y unidad de medida
+  cont[(cantidad, um_id)] = req.params.cantidad.split(" ");
+  connection.query(
+    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_cantidad LIKE ? AND um_id LIKE ?",
+    ["%" + cantidad + "%", "%" + um_id + "%"],
+    (err, rows) => {
+      if (err) {
+        console.error("Error de consulta:", err);
+        return res.status(500).send("Error de servidor");
+      }
+      res.json(rows);
+    }
+  );
+});
+
+//busqueda por stock
+
+app.get("/alimentos/busqueda/stock/:stock", (req, res) => {
+  const { stock } = req.params;
+  connection.query(
+    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_stock LIKE ?",
+    ["%" + stock + "%"],
+    (err, rows) => {
+      if (err) {
+        console.error("Error de consulta:", err);
+        return res.status(500).send("Error de servidor");
+      }
+      res.json(rows);
+    }
+  );
+});
+
+//busqueda por fecha de caducidad
+
+app.get("/alimentos/busqueda/caducidad/:caducidad", (req, res) => {
+  const { caducidad } = req.params;
+  connection.query(
+    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_fechaCaducidad LIKE ?",
+    ["%" + caducidad + "%"],
+    (err, rows) => {
+      if (err) {
+        console.error("Error de consulta:", err);
+        return res.status(500).send("Error de servidor");
+      }
+      res.json(rows);
     }
   );
 });
