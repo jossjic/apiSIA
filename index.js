@@ -24,8 +24,8 @@ app.use(
     key: "user_cookie",
     secret: "12345",
     store: sessionStore,
-    resave: true,
-    saveUninitialized: true,
+    resave: false,
+    saveUninitialized: false,
   })
 );
 
@@ -65,10 +65,11 @@ app.post("/login", (req, res) => {
         .digest("hex");
 
       if (userData.u_contraseña === hashedPassword) {
-        // Establecer la sesión del usuario
         req.session.userId = userData.u_id;
-        console.log("Usuario", req.session.userId);
-        res.sendStatus(200);
+        req.session.save(() => { // Guardar la sesión
+          console.log("Usuario", req.session.userId);
+          res.sendStatus(200);
+        });
       } else {
         res.status(401).send("Contraseña incorrecta");
       }
