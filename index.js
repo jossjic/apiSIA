@@ -1179,6 +1179,11 @@ app.get("/alimentos/busqueda/caducidad/:caducidad", (req, res) => {
     formattedCaducidad = caducidad.replace(/\//g, "-");
   }
 
+  // Definir el offset
+  const page = parseInt(req.query.page) || 1; // Página actual
+  const pageSize = parseInt(req.query.pageSize) || 10; // Tamaño de la página
+  const offset = (page - 1) * pageSize; // Desplazamiento
+
   // Consulta SQL dinámica
   let sqlQuery = "";
   if (formattedCaducidad.includes("-")) {
