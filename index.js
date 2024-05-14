@@ -1259,10 +1259,10 @@ app.post("/usuarios", (req, res) => {
 // Actualizar un usuario por ID
 app.put("/usuarios/:id", (req, res) => {
   const { id } = req.params;
-  const { u_id, u_nombre, u_apellidos, u_email } = req.body;
+  const { u_nombre, u_apellidos, u_email } = req.body;
 
   // Comprueba si se proporcionó un ID válido en el cuerpo de la solicitud
-  if (!u_id) {
+  if (!id) {
     return res
       .status(400)
       .send("Se requiere un ID de usuario válido en el cuerpo de la solicitud");
@@ -1271,7 +1271,7 @@ app.put("/usuarios/:id", (req, res) => {
   // Ejecuta la consulta para actualizar el usuario
   connection.query(
     "UPDATE Usuario SET u_id = ?, u_nombre = ?, u_apellidos = ?, u_email = ? WHERE u_id = ?",
-    [u_id, u_nombre, u_apellidos, u_email, id],
+    [id, u_nombre, u_apellidos, u_email, id],
     (err, result) => {
       if (err) {
         console.error("Error al actualizar usuario:", err);
