@@ -1186,20 +1186,27 @@ app.get("/alimentos/busqueda/caducidad/:caducidad", (req, res) => {
 
   // Consulta SQL dinámica
   let sqlQuery = "";
+  let countQuery = "";
   if (formattedCaducidad.includes("-")) {
     // Si la fecha contiene guiones, buscar directamente
     sqlQuery =
       "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_fechaCaducidad LIKE ? LIMIT ?, ?";
+    countQuery =
+      "SELECT COUNT(*) AS total FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_fechaCaducidad LIKE ?";
   } else {
     // Si la fecha no contiene guiones, agregarlos dependiendo del caso
     if (formattedCaducidad.includes("/")) {
       // Si la fecha contiene barras, buscar por mes
       sqlQuery =
         "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_fechaCaducidad LIKE CONCAT('%', ?, '%') LIMIT ?, ?";
+      countQuery =
+        "SELECT COUNT(*) AS total FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_fechaCaducidad LIKE CONCAT('%', ?, '%')";
     } else {
       // Si no contiene barras, buscar por día o por año
       sqlQuery =
         "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_fechaCaducidad LIKE CONCAT(?, '%') LIMIT ?, ?";
+      countQuery =
+        "SELECT COUNT(*) AS total FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_fechaCaducidad LIKE CONCAT(?, '%')";
     }
   }
 
@@ -1214,25 +1221,21 @@ app.get("/alimentos/busqueda/caducidad/:caducidad", (req, res) => {
       }
 
       // Consulta para obtener el conteo total de alimentos
-      connection.query(
-        "SELECT COUNT(*) AS total FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_fechaCaducidad LIKE ?",
-        [formattedCaducidad],
-        (err, countResult) => {
-          if (err) {
-            console.error("Error de consulta:", err);
-            return res.status(500).send("Error de servidor");
-          }
-
-          // Crear un objeto JSON con los datos de los alimentos y el conteo total
-          const total = countResult[0].total;
-          const response = {
-            total,
-            alimentos,
-          };
-
-          res.json(response);
+      connection.query(countQuery, [formattedCaducidad], (err, countResult) => {
+        if (err) {
+          console.error("Error de consulta:", err);
+          return res.status(500).send("Error de servidor");
         }
-      );
+
+        // Crear un objeto JSON con los datos de los alimentos y el conteo total
+        const total = countResult[0].total;
+        const response = {
+          total,
+          alimentos,
+        };
+
+        res.json(response);
+      });
     }
   );
 });
