@@ -1152,7 +1152,6 @@ app.get("/alimentos/busqueda/stock/:stock", (req, res) => {
     }
   );
 });
-
 app.get("/alimentos/busqueda/caducidad/:caducidad", (req, res) => {
   const { caducidad } = req.params;
   let formattedCaducidad = "";
@@ -1170,8 +1169,11 @@ app.get("/alimentos/busqueda/caducidad/:caducidad", (req, res) => {
     } else if (inputParts.length === 1) {
       // Si hay un solo componente en la entrada, buscar por año
       formattedCaducidad = `${inputParts[0]}%`;
+    } else if (inputParts.length === 2) {
+      // Si hay dos componentes en la entrada, buscar por año y mes
+      formattedCaducidad = `${inputParts[0]}-${inputParts[1]}%`;
     } else {
-      // Si es un número menor o igual a 12 y hay más de un componente, buscar por mes
+      // Si hay más de dos componentes, buscar por mes
       formattedCaducidad = `/${inputParts[0]}`;
     }
   } else {
