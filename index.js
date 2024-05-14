@@ -1156,63 +1156,22 @@ app.get("/alimentos/busqueda/caducidad/:caducidad", (req, res) => {
   const { caducidad } = req.params;
   let formattedCaducidad = "";
 
-  // Analizar la entrada del usuario
-  const inputParts = caducidad.split("/");
-  const num = parseInt(inputParts[0]);
-  const isNumber = !isNaN(num);
-
-  // Formato de fecha
-  if (isNumber) {
-    if (num > 12) {
-      // Si es un número mayor a 12, buscar por día
-      formattedCaducidad = inputParts.join("-");
-    } else if (inputParts.length === 1) {
-      // Si hay un solo componente en la entrada, buscar por año
-      formattedCaducidad = `${inputParts[0]}%`;
-    } else if (inputParts.length === 2) {
-      // Si hay dos componentes en la entrada, buscar por año y mes
-      formattedCaducidad = `${inputParts[0]}-${inputParts[1]}%`;
-    } else {
-      // Si hay más de dos componentes, buscar por mes
-      formattedCaducidad = `/${inputParts[0]}`;
-    }
-  } else {
-    // La entrada parece ser una fecha, formatearla adecuadamente
-    formattedCaducidad = caducidad.replace(/\//g, "-");
-  }
+  // Formatear la entrada del usuario para la consulta SQL
+  formattedCaducidad = `${caducidad}%`;
 
   // Definir el offset
   const page = parseInt(req.query.page) || 1; // Página actual
   const pageSize = parseInt(req.query.pageSize) || 10; // Tamaño de la página
   const offset = (page - 1) * pageSize; // Desplazamiento
 
-  // Consulta SQL dinámica
-  let sqlQuery = "";
-  let countQuery = "";
-  if (formattedCaducidad.includes("-")) {
-    // Si la fecha contiene guiones, buscar directamente
-    sqlQuery =
-      "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_fechaCaducidad LIKE ? LIMIT ?, ?";
-    countQuery =
-      "SELECT COUNT(*) AS total FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_fechaCaducidad LIKE ?";
-  } else {
-    // Si la fecha no contiene guiones, agregarlos dependiendo del caso
-    if (formattedCaducidad.includes("/")) {
-      // Si la fecha contiene barras, buscar por mes
-      sqlQuery =
-        "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_fechaCaducidad LIKE CONCAT('%', ?, '%') LIMIT ?, ?";
-      countQuery =
-        "SELECT COUNT(*) AS total FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_fechaCaducidad LIKE CONCAT('%', ?, '%')";
-    } else {
-      // Si no contiene barras, buscar por día o por año
-      sqlQuery =
-        "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_fechaCaducidad LIKE CONCAT(?, '%') LIMIT ?, ?";
-      countQuery =
-        "SELECT COUNT(*) AS total FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_fechaCaducidad LIKE CONCAT(?, '%')";
-    }
-  }
+  // Consulta SQL para obtener los datos de los alimentos
+  const sqlQuery =
+    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_fechaCaducidad LIKE ? LIMIT ?, ?";
+  // Consulta SQL para obtener el conteo total de alimentos
+  const countQuery =
+    "SELECT COUNT(*) AS total FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_fechaCaducidad LIKE ?";
 
-  // Consulta para obtener los datos de los alimentos
+  // Ejecutar la consulta para obtener los datos de los alimentos
   connection.query(
     sqlQuery,
     [formattedCaducidad, offset, pageSize],
@@ -1222,7 +1181,7 @@ app.get("/alimentos/busqueda/caducidad/:caducidad", (req, res) => {
         return res.status(500).send("Error de servidor");
       }
 
-      // Consulta para obtener el conteo total de alimentos
+      // Ejecutar la consulta para obtener el conteo total de alimentos
       connection.query(countQuery, [formattedCaducidad], (err, countResult) => {
         if (err) {
           console.error("Error de consulta:", err);
