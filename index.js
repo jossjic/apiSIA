@@ -1043,77 +1043,68 @@ app.get("/alimentos/busqueda/nombre/:nombre", (req, res) => {
 
 app.get("/alimentos/busqueda/marca/:marca", (req, res) => {
   const { marca } = req.params;
+  let formattedMarca = "";
+
+  // Formatear la entrada del usuario para la consulta SQL
+  formattedMarca =
+    marca.trim().toLowerCase() === "sin marca" ? null : `%${marca}%`;
+
   const page = parseInt(req.query.page) || 1; // Página actual
   const pageSize = parseInt(req.query.pageSize) || 10; // Tamaño de la página
   const offset = (page - 1) * pageSize; // Desplazamiento
 
-  // Verificar si el usuario busca alimentos sin marca
-  if (marca.trim().toLowerCase() === "sin marca") {
-    // Consulta para obtener los datos de los alimentos sin marca
-    connection.query(
-      "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE m_nombre IS NULL LIMIT ?, ?",
-      [offset, pageSize],
-      (err, alimentos) => {
-        if (err) {
-          console.error("Error de consulta:", err);
-          return res.status(500).send("Error de servidor");
-        }
+  // Consulta para obtener los datos de los alimentos
+  let sqlQuery;
+  let countQuery;
 
-        // Consulta para obtener el conteo total de alimentos sin marca
-        connection.query(
-          "SELECT COUNT(*) AS total FROM Alimento WHERE m_nombre IS NULL",
-          (err, countResult) => {
-            if (err) {
-              console.error("Error de consulta:", err);
-              return res.status(500).send("Error de servidor");
-            }
-
-            // Crear un objeto JSON con los datos de los alimentos sin marca y el conteo total
-            const total = countResult[0].total;
-            const response = {
-              total,
-              alimentos,
-            };
-
-            res.json(response);
-          }
-        );
-      }
-    );
+  if (formattedMarca === null) {
+    // Si el usuario busca alimentos sin marca
+    sqlQuery =
+      "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE m_nombre IS NULL LIMIT ?, ?";
+    countQuery =
+      "SELECT COUNT(*) AS total FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id WHERE m_nombre IS NULL";
   } else {
-    // Consulta para obtener los datos de los alimentos con la marca especificada
-    connection.query(
-      "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE m_nombre LIKE ? LIMIT ?, ?",
-      ["%" + marca + "%", offset, pageSize],
-      (err, alimentos) => {
-        if (err) {
-          console.error("Error de consulta:", err);
-          return res.status(500).send("Error de servidor");
-        }
-
-        // Consulta para obtener el conteo total de alimentos con la marca especificada
-        connection.query(
-          "SELECT COUNT(*) AS total FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id WHERE m_nombre LIKE ?",
-          ["%" + marca + "%"],
-          (err, countResult) => {
-            if (err) {
-              console.error("Error de consulta:", err);
-              return res.status(500).send("Error de servidor");
-            }
-
-            // Crear un objeto JSON con los datos de los alimentos y el conteo total
-            const total = countResult[0].total;
-            const response = {
-              total,
-              alimentos,
-            };
-
-            res.json(response);
-          }
-        );
-      }
-    );
+    // Si el usuario busca alimentos con una marca específica
+    sqlQuery =
+      "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE m_nombre LIKE ? LIMIT ?, ?";
+    countQuery =
+      "SELECT COUNT(*) AS total FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id WHERE m_nombre LIKE ?";
   }
+
+  // Ejecutar la consulta para obtener los datos de los alimentos
+  connection.query(
+    sqlQuery,
+    formattedMarca === null
+      ? [offset, pageSize]
+      : [formattedMarca, offset, pageSize],
+    (err, alimentos) => {
+      if (err) {
+        console.error("Error de consulta:", err);
+        return res.status(500).send("Error de servidor");
+      }
+
+      // Ejecutar la consulta para obtener el conteo total de alimentos
+      connection.query(
+        countQuery,
+        formattedMarca === null ? [] : [formattedMarca],
+        (err, countResult) => {
+          if (err) {
+            console.error("Error de consulta:", err);
+            return res.status(500).send("Error de servidor");
+          }
+
+          // Crear un objeto JSON con los datos de los alimentos y el conteo total
+          const total = countResult[0].total;
+          const response = {
+            total,
+            alimentos,
+          };
+
+          res.json(response);
+        }
+      );
+    }
+  );
 });
 
 //busqueda por cantidad (cantidad + unidadmedida)
