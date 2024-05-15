@@ -199,8 +199,6 @@ app.get("/alimentos/checkDate", (req, res) => {
   });
 });
 
-
-
 // Obtener todos los alimentos
 app.get("/alimentos", (req, res) => {
   connection.query("SELECT * FROM Alimento", (err, rows) => {
@@ -1053,7 +1051,7 @@ app.get("/alimentos/busqueda/marca/:marca", (req, res) => {
   if (marca.trim().toLowerCase() === "sin marca") {
     // Consulta para obtener los datos de los alimentos sin marca
     connection.query(
-      "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE m_id IS NULL LIMIT ?, ?",
+      "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE m_nombre IS NULL LIMIT ?, ?",
       [offset, pageSize],
       (err, alimentos) => {
         if (err) {
@@ -1063,7 +1061,7 @@ app.get("/alimentos/busqueda/marca/:marca", (req, res) => {
 
         // Consulta para obtener el conteo total de alimentos sin marca
         connection.query(
-          "SELECT COUNT(*) AS total FROM Alimento WHERE m_id IS NULL",
+          "SELECT COUNT(*) AS total FROM Alimento WHERE m_nombre IS NULL",
           (err, countResult) => {
             if (err) {
               console.error("Error de consulta:", err);
