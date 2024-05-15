@@ -170,23 +170,29 @@ app.get("/alimentos/atun/:id", (req, res) => {
 app.get("/alimentos/checkDate", (req, res) => {
   const ids = req.query.ids;
 
-  if (!Array.isArray(ids) || !ids.length) {
+  if (!Array.isArray(ids) || ids.length === 0) {
     return res.status(400).send("No se proporcionaron IDs válidos");
   }
 
-  const placeholders = ids.map((_, i) => "?").join(",");
-  connection.query(
-    `SELECT * FROM Alimento WHERE a_id IN (${placeholders})`,
-    ids,
-    (err, rows) => {
-      if (err) {
-        console.error("Error de consulta:", err);
-        return res.status(500).send("Error de servidor");
-      }
-      res.json(rows);
+  // Asegurarse de que ids sea un array, incluso si solo es un único elemento
+  const idsArray = Array.isArray(ids) ? ids : [ids];
+
+  const placeholders = idsArray.map(() => "?").join(",");
+  const query = `
+    SELECT a.*, (SELECT m.m_nombre FROM Marca m WHERE m.m_id = a.m_id) AS marca_nombre 
+    FROM Alimento a 
+    WHERE a.a_id IN (${placeholders});
+  `;
+
+  connection.query(query, idsArray, (err, rows) => {
+    if (err) {
+      console.error("Error de consulta:", err);
+      return res.status(500).send("Error de servidor");
     }
-  );
+    res.json(rows);
+  });
 });
+
 
 // Obtener todos los alimentos
 app.get("/alimentos", (req, res) => {
