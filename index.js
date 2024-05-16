@@ -1062,7 +1062,7 @@ app.get("/alimentos/busqueda/nombre/:nombre", (req, res) => {
 
 //busqueda por nombre general, sin paginacion, para autocompletar
 
-app.get("/alimentos/busqueda/nombre/:nombre", (req, res) => {
+app.get("/alimentos/busqueda/nombre/total/:nombre", (req, res) => {
   const { nombre } = req.params;
   connection.query(
     "SELECT a_nombre FROM Alimento WHERE a_nombre LIKE ?",
