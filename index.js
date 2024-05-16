@@ -1060,6 +1060,23 @@ app.get("/alimentos/busqueda/nombre/:nombre", (req, res) => {
   );
 });
 
+//busqueda por nombre general, sin paginacion, para autocompletar
+
+app.get("/alimentos/busqueda/nombre/:nombre", (req, res) => {
+  const { nombre } = req.params;
+  connection.query(
+    "SELECT a_nombre FROM Alimento WHERE a_nombre LIKE ?",
+    ["%" + nombre + "%"],
+    (err, rows) => {
+      if (err) {
+        console.error("Error de consulta:", err);
+        return res.status(500).send("Error de servidor");
+      }
+      res.json(rows);
+    }
+  );
+});
+
 app.get("/alimentos/busqueda/marca/:marca", (req, res) => {
   const { marca } = req.params;
   let formattedMarca = "";
