@@ -4,6 +4,7 @@ import session from "express-session";
 import { connection } from "./db.js";
 import crypto from "crypto";
 import mysqlSession from "express-mysql-session";
+import jwt from "jsonwebtoken";
 
 const app = express();
 
@@ -18,6 +19,8 @@ app.use((req, res, next) => {
 
 const MySQLStore = mysqlSession(session);
 const sessionStore = new MySQLStore({}, connection);
+const ACCESS_TOKEN_SECRET = 'asdioas'; 
+const REFRESH_TOKEN_SECRET = 'asdioasre'; 
 
 app.use(
   session({
@@ -65,12 +68,11 @@ app.post("/login", (req, res) => {
         .digest("hex");
 
       if (userData.u_contraseña === hashedPassword) {
-        req.session.userId = userData.u_id;
-        req.session.save(() => {
-          // Guardar la sesión
-          console.log("Usuario", req.session.userId);
-          res.sendStatus(200);
-        });
+        // Generar token de acceso
+        const accessToken = jwt.sign({ userId: userData.u_id }, ACCESS_TOKEN_SECRET, { expiresIn: '15m' });
+        // Generar token de actualización
+        const refreshToken = jwt.sign({ userId: userData.u_id }, REFRESH_TOKEN_SECRET, { expiresIn: '7d' });
+        res.json({ accessToken, refreshToken }); 
       } else {
         res.status(401).send("Contraseña incorrecta");
       }
