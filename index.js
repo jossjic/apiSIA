@@ -4,6 +4,7 @@ import session from "express-session";
 import { connection } from "./db.js";
 import crypto from "crypto";
 import mysqlSession from "express-mysql-session";
+import jwt from "jsonwebtoken";
 
 const app = express();
 
@@ -18,6 +19,8 @@ app.use((req, res, next) => {
 
 const MySQLStore = mysqlSession(session);
 const sessionStore = new MySQLStore({}, connection);
+const ACCESS_TOKEN_SECRET = 'asdioas'; 
+const REFRESH_TOKEN_SECRET = 'asdioasre'; 
 
 app.use(
   session({
@@ -65,17 +68,22 @@ app.post("/login", (req, res) => {
         .digest("hex");
 
       if (userData.u_contraseña === hashedPassword) {
-        req.session.userId = userData.u_id;
-        req.session.save(() => {
-          // Guardar la sesión
-          console.log("Usuario", req.session.userId);
-          res.sendStatus(200);
-        });
+        // Generar token de acceso
+        const accessToken = jwt.sign({ userId: userData.u_id }, ACCESS_TOKEN_SECRET, { expiresIn: '15m' });
+        // Generar token de actualización
+        const refreshToken = jwt.sign({ userId: userData.u_id }, REFRESH_TOKEN_SECRET, { expiresIn: '7d' });
+        res.json({ accessToken, refreshToken }); 
       } else {
         res.status(401).send("Contraseña incorrecta");
       }
     }
   );
+});
+
+app.post("/logout", (req, res) => {
+  const { token } = req.body;
+  refreshTokens = refreshTokens.filter(t => t !== token);
+  res.sendStatus(204); 
 });
 
 //Validar sesion
@@ -101,34 +109,6 @@ app.get("/getMessage", (req, res) => {
   const message = req.session.message || "";
   console.log("Mensaje obtenido de la sesión:", message);
   res.json(message);
-});
-
-// Ruta para verificar si el usuario está conectado y devolver sus detalles
-app.get("/checkUser", (req, res) => {
-  // Verificar si hay una sesión activa
-  if (req.session.userId) {
-    // Si hay una sesión activa, buscar los detalles del usuario en la base de datos
-    connection.query(
-      "SELECT * FROM Usuario WHERE u_id = ?",
-      [req.session.userId],
-      (err, rows) => {
-        if (err) {
-          console.error("Error de consulta:", err);
-          return res.status(500).send("Error de servidor");
-        }
-        if (rows.length === 0) {
-          return res.status(401).send("Usuario no encontrado");
-        }
-
-        const userData = rows[0];
-        // Devolver los detalles del usuario
-        res.json(userData);
-      }
-    );
-  } else {
-    // Si no hay sesión activa, devolver un error
-    res.status(401).send("Usuario no conectado");
-  }
 });
 
 //-------------------------------------------------------------------------------------------------------
