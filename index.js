@@ -80,6 +80,12 @@ app.post("/login", (req, res) => {
   );
 });
 
+app.post("/logout", (req, res) => {
+  const { token } = req.body;
+  refreshTokens = refreshTokens.filter(t => t !== token);
+  res.sendStatus(204); 
+});
+
 //Validar sesion
 app.use("/validate", function (req, res) {
   if (req.session.userId) {
@@ -103,34 +109,6 @@ app.get("/getMessage", (req, res) => {
   const message = req.session.message || "";
   console.log("Mensaje obtenido de la sesión:", message);
   res.json(message);
-});
-
-// Ruta para verificar si el usuario está conectado y devolver sus detalles
-app.get("/checkUser", (req, res) => {
-  // Verificar si hay una sesión activa
-  if (req.session.userId) {
-    // Si hay una sesión activa, buscar los detalles del usuario en la base de datos
-    connection.query(
-      "SELECT * FROM Usuario WHERE u_id = ?",
-      [req.session.userId],
-      (err, rows) => {
-        if (err) {
-          console.error("Error de consulta:", err);
-          return res.status(500).send("Error de servidor");
-        }
-        if (rows.length === 0) {
-          return res.status(401).send("Usuario no encontrado");
-        }
-
-        const userData = rows[0];
-        // Devolver los detalles del usuario
-        res.json(userData);
-      }
-    );
-  } else {
-    // Si no hay sesión activa, devolver un error
-    res.status(401).send("Usuario no conectado");
-  }
 });
 
 //-------------------------------------------------------------------------------------------------------
