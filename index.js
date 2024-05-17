@@ -1466,6 +1466,23 @@ app.get("/marcas/:id", (req, res) => {
   });
 });
 
+//busqueda por nombre general, sin paginacion, para autocompletar
+
+app.get("/marcas/busqueda/nombre/total/:nombre", (req, res) => {
+  const { nombre } = req.params;
+  connection.query(
+    "SELECT m_nombre FROM Marca WHERE m_nombre LIKE ?",
+    ["%" + nombre + "%"],
+    (err, rows) => {
+      if (err) {
+        console.error("Error de consulta:", err);
+        return res.status(500).send("Error de servidor");
+      }
+      res.json(rows);
+    }
+  );
+});
+
 // Agregar una nueva marca
 app.post("/marcas", (req, res) => {
   const { m_nombre } = req.body;
