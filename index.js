@@ -19,8 +19,8 @@ app.use((req, res, next) => {
 
 const MySQLStore = mysqlSession(session);
 const sessionStore = new MySQLStore({}, connection);
-const ACCESS_TOKEN_SECRET = 'asdioas'; 
-const REFRESH_TOKEN_SECRET = 'asdioasre'; 
+const ACCESS_TOKEN_SECRET = "asdioas";
+const REFRESH_TOKEN_SECRET = "asdioasre";
 
 app.use(
   session({
@@ -69,10 +69,18 @@ app.post("/login", (req, res) => {
 
       if (userData.u_contraseña === hashedPassword) {
         // Generar token de acceso
-        const accessToken = jwt.sign({ userId: userData.u_id }, ACCESS_TOKEN_SECRET, { expiresIn: '15m' });
+        const accessToken = jwt.sign(
+          { userId: userData.u_id },
+          ACCESS_TOKEN_SECRET,
+          { expiresIn: "15m" }
+        );
         // Generar token de actualización
-        const refreshToken = jwt.sign({ userId: userData.u_id }, REFRESH_TOKEN_SECRET, { expiresIn: '7d' });
-        res.json({ accessToken, refreshToken }); 
+        const refreshToken = jwt.sign(
+          { userId: userData.u_id },
+          REFRESH_TOKEN_SECRET,
+          { expiresIn: "7d" }
+        );
+        res.json({ accessToken, refreshToken });
       } else {
         res.status(401).send("Contraseña incorrecta");
       }
@@ -82,8 +90,8 @@ app.post("/login", (req, res) => {
 
 app.post("/logout", (req, res) => {
   const { token } = req.body;
-  refreshTokens = refreshTokens.filter(t => t !== token);
-  res.sendStatus(204); 
+  refreshTokens = refreshTokens.filter((t) => t !== token);
+  res.sendStatus(204);
 });
 
 //Validar sesion
@@ -1451,7 +1459,7 @@ app.get("/marcas/:id", (req, res) => {
 app.get("/marcas/busqueda/nombre/total/:nombre", (req, res) => {
   const { nombre } = req.params;
   connection.query(
-    "SELECT m_nombre FROM Marca WHERE m_nombre LIKE ?",
+    "SELECT * FROM Marca WHERE m_nombre LIKE ?",
     ["%" + nombre + "%"],
     (err, rows) => {
       if (err) {
