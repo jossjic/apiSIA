@@ -2,11 +2,13 @@ import express from "express";
 import bodyParser from "body-parser";
 import session from "express-session";
 import { connection } from "./db.js";
-import crypto from "crypto";
+import crypto, { verify } from "crypto";
 import mysqlSession from "express-mysql-session";
 import jwt from "jsonwebtoken";
+import cookieParser from "cookie-parser";
 
 const app = express();
+app.use(cookieParser());
 
 // Middleware para permitir solicitudes desde localhost:5173
 app.use((req, res, next) => {
@@ -80,6 +82,10 @@ app.post("/login", (req, res) => {
           REFRESH_TOKEN_SECRET,
           { expiresIn: "7d" }
         );
+        res.cookie("accessToken", accessToken, {
+          maxAge: 300000,
+          httpOnly: true,
+        });
         res.json({ accessToken, refreshToken });
       } else {
         res.status(401).send("Contraseña incorrecta");
