@@ -1832,6 +1832,22 @@ app.post("/usuarios/stock", (req, res) => {
   );
 });
 
+app.get("/usuarios/:id/transacciones", (req, res) => {
+  const { id } = req.params;
+  connection.query(
+    "SELECT * FROM Transacciones WHERE usuario_id = ? ORDER BY fecha DESC",
+    [id],
+    (err, results) => {
+      if (err) {
+        console.error("Error al obtener transacciones:", err);
+        return res.status(500).send("Error del servidor");
+      }
+      res.json(results);
+    }
+  );
+});
+
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Servidor Express en funcionamiento en el puerto ${PORT}`);
