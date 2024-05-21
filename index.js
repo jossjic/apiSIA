@@ -897,82 +897,70 @@ app.post("/alimentos", (req, res) => {
     um_id,
     m_id,
   } = req.body;
-  if (m_id === 0) {
-    connection.query(
-      "INSERT INTO Alimento (a_nombre, a_cantidad, a_stock, a_fechaSalida, a_fechaEntrada, a_fechaCaducidad, um_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
-      [
-        a_nombre,
-        a_cantidad,
-        a_stock,
-        a_fechaSalida,
-        a_fechaEntrada,
-        a_fechaCaducidad,
-        um_id,
-      ],
-      (err, result) => {
-        if (err) {
-          console.error("Error al insertar alimento:", err);
-          return res.status(500).send("Error de servidor");
-        }
-        res.status(201).send("Alimento agregado correctamente");
-      }
-    );
-  } else {
-    connection.query(
-      "INSERT INTO Alimento (a_nombre, a_cantidad, a_stock, a_fechaSalida, a_fechaEntrada, a_fechaCaducidad, um_id, m_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-      [
-        a_nombre,
-        a_cantidad,
-        a_stock,
-        a_fechaSalida,
-        a_fechaEntrada,
-        a_fechaCaducidad,
-        um_id,
-        m_id,
-      ],
-      (err, result) => {
-        if (err) {
-          console.error("Error al insertar alimento:", err);
-          return res.status(500).send("Error de servidor");
-        }
-        res.status(201).send("Alimento agregado correctamente");
-      }
-    );
-  }
-});
 
-// Actualizar un alimento por ID
-app.put("/alimentos/:id", (req, res) => {
-  const { id } = req.params;
-  const {
-    a_nombre,
-    a_cantidad,
-    a_stock,
-    a_fechaSalida,
-    a_fechaEntrada,
-    a_fechaCaducidad,
-    um_id,
-    m_id,
-  } = req.body;
+  // Primero, verifica si ya existe un alimento con los mismos atributos relevantes
   connection.query(
-    "UPDATE Alimento SET a_nombre = ?, a_cantidad = ?, a_stock = ?, a_fechaSalida = ?, a_fechaEntrada = ?, a_fechaCaducidad = ?, um_id = ?, m_id = ? WHERE a_id = ?",
-    [
-      a_nombre,
-      a_cantidad,
-      a_stock,
-      a_fechaSalida,
-      a_fechaEntrada,
-      a_fechaCaducidad,
-      um_id,
-      m_id,
-      id,
-    ],
-    (err, result) => {
+    "SELECT * FROM Alimento WHERE a_nombre = ? AND a_cantidad = ? AND a_fechaCaducidad = ? AND um_id = ? AND (m_id = ? OR (? = 0 AND m_id IS NULL))",
+    [a_nombre, a_cantidad, a_fechaCaducidad, um_id, m_id, m_id],
+    (err, results) => {
       if (err) {
-        console.error("Error al actualizar alimento:", err);
+        console.error("Error al buscar alimento:", err);
         return res.status(500).send("Error de servidor");
       }
-      res.status(200).send("Alimento actualizado correctamente");
+
+      if (results.length > 0) {
+        // Si existe, actualiza el stock
+        const existingAlimento = results[0];
+        const newStock = existingAlimento.a_stock + a_stock;
+        connection.query(
+          "UPDATE Alimento SET a_stock = ?, a_fechaSalida = ?, a_fechaEntrada = ? WHERE id = ?",
+          [newStock, a_fechaSalida, a_fechaEntrada, existingAlimento.id],
+          (err, result) => {
+            if (err) {
+              console.error("Error al actualizar el stock del alimento:", err);
+              return res.status(500).send("Error de servidor");
+            }
+            res
+              .status(200)
+              .send("Stock del alimento actualizado correctamente");
+          }
+        );
+      } else {
+        // Si no existe, inserta un nuevo registro
+        const query =
+          m_id === 0
+            ? "INSERT INTO Alimento (a_nombre, a_cantidad, a_stock, a_fechaSalida, a_fechaEntrada, a_fechaCaducidad, um_id) VALUES (?, ?, ?, ?, ?, ?, ?)"
+            : "INSERT INTO Alimento (a_nombre, a_cantidad, a_stock, a_fechaSalida, a_fechaEntrada, a_fechaCaducidad, um_id, m_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        const params =
+          m_id === 0
+            ? [
+                a_nombre,
+                a_cantidad,
+                a_stock,
+                a_fechaSalida,
+                a_fechaEntrada,
+                a_fechaCaducidad,
+                um_id,
+              ]
+            : [
+                a_nombre,
+                a_cantidad,
+                a_stock,
+                a_fechaSalida,
+                a_fechaEntrada,
+                a_fechaCaducidad,
+                um_id,
+                m_id,
+              ];
+
+        connection.query(query, params, (err, result) => {
+          if (err) {
+            console.error("Error al insertar alimento:", err);
+            return res.status(500).send("Error de servidor");
+          }
+          res.status(201).send("Alimento agregado correctamente");
+        });
+      }
     }
   );
 });
@@ -1846,7 +1834,6 @@ app.get("/usuarios/:id/transacciones", (req, res) => {
     }
   );
 });
-
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
