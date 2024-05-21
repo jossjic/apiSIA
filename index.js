@@ -897,7 +897,7 @@ app.post("/alimentos", (req, res) => {
     um_id,
     m_id,
   } = req.body;
-
+  console.log(req.body);
   // Primero, verifica si ya existe un alimento con los mismos atributos relevantes
   connection.query(
     "SELECT * FROM Alimento WHERE a_nombre = ? AND a_cantidad = ? AND a_fechaCaducidad = ? AND um_id = ? AND (m_id = ? OR (? = 0 AND m_id IS NULL))",
