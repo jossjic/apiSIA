@@ -915,8 +915,8 @@ app.post("/alimentos", (req, res) => {
           const existingAlimento = results[0];
           const newStock = existingAlimento.a_stock + a_stock;
           connection.query(
-            "UPDATE Alimento SET a_stock = ?, a_fechaSalida = ?, a_fechaEntrada = ? WHERE id = ?",
-            [newStock, a_fechaSalida, a_fechaEntrada, existingAlimento.id],
+            "UPDATE Alimento SET a_stock = ?, a_fechaSalida = ?, a_fechaEntrada = ? WHERE a_id = ?",
+            [newStock, a_fechaSalida, a_fechaEntrada, existingAlimento.a_id],
             (err, result) => {
               if (err) {
                 console.error(
@@ -983,8 +983,8 @@ app.post("/alimentos", (req, res) => {
           const existingAlimento = results[0];
           const newStock = existingAlimento.a_stock + a_stock;
           connection.query(
-            "UPDATE Alimento SET a_stock = ?, a_fechaSalida = ?, a_fechaEntrada = ? WHERE id = ?",
-            [newStock, a_fechaSalida, a_fechaEntrada, existingAlimento.id],
+            "UPDATE Alimento SET a_stock = ?, a_fechaSalida = ?, a_fechaEntrada = ? WHERE a_id = ?",
+            [newStock, a_fechaSalida, a_fechaEntrada, existingAlimento.a_id],
             (err, result) => {
               if (err) {
                 console.error(
