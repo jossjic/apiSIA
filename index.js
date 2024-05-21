@@ -913,7 +913,8 @@ app.post("/alimentos", (req, res) => {
         if (results.length > 0) {
           // Si existe, actualiza el stock
           const existingAlimento = results[0];
-          const newStock = existingAlimento.a_stock + a_stock;
+          const newStock =
+            parseInt(existingAlimento.a_stock) + parseInt(a_stock);
           connection.query(
             "UPDATE Alimento SET a_stock = ?, a_fechaSalida = ?, a_fechaEntrada = ? WHERE a_id = ?",
             [newStock, a_fechaSalida, a_fechaEntrada, existingAlimento.a_id],
