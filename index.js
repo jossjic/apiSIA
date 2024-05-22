@@ -1649,7 +1649,7 @@ app.get("/usuario-alimento/join/all", (req, res) => {
 app.get("/usuario-alimento/join/all/usuario/:id", (req, res) => {
   const { id } = req.params;
   connection.query(
-    "SELECT * FROM UsuarioAlimento NATURAL JOIN Usuario NATURAL JOIN Alimento WHERE u_id = ?",
+    "SELECT * FROM UsuarioAlimento NATURAL JOIN Usuario NATURAL JOIN Alimento LEFT OUTER JOIN Marca ON Marca.m_id = Alimento.m_id WHERE u_id = ?",
     [id],
     (err, rows) => {
       if (err) {
