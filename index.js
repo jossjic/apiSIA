@@ -86,7 +86,7 @@ app.post("/login", (req, res) => {
           maxAge: 300000,
           httpOnly: true,
         });
-        res.json({ accessToken, refreshToken });
+        res.json({ userId: userData.u_id, accessToken, refreshToken });
       } else {
         res.status(401).send("Contraseña incorrecta");
       }
