@@ -1041,6 +1041,43 @@ app.post("/alimentos", (req, res) => {
   }
 });
 
+//actualizar alimento por id
+
+app.put("/alimentos/:id", (req, res) => {
+  const { id } = req.params;
+  const {
+    a_nombre,
+    a_cantidad,
+    a_stock,
+    a_fechaSalida,
+    a_fechaEntrada,
+    a_fechaCaducidad,
+    um_id,
+    m_id,
+  } = req.body;
+  connection.query(
+    "UPDATE Alimento SET a_nombre = ?, a_cantidad = ?, a_stock = ?, a_fechaSalida = ?, a_fechaEntrada = ?, a_fechaCaducidad = ?, um_id = ?, m_id = ? WHERE a_id = ?",
+    [
+      a_nombre,
+      a_cantidad,
+      a_stock,
+      a_fechaSalida,
+      a_fechaEntrada,
+      a_fechaCaducidad,
+      um_id,
+      m_id,
+      id,
+    ],
+    (err, result) => {
+      if (err) {
+        console.error("Error al actualizar alimento:", err);
+        return res.status(500).send("Error de servidor");
+      }
+      res.status(200).send("Alimento actualizado correctamente");
+    }
+  );
+});
+
 //actualizar alimento solo con stock
 
 app.put("/alimentos/stock/:id", (req, res) => {
