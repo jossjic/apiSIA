@@ -6,7 +6,7 @@ import crypto, { verify } from "crypto";
 import mysqlSession from "express-mysql-session";
 import jwt from "jsonwebtoken";
 import axios from "axios";
-import RedisStore from "connect-redis";
+import connectRedis from "connect-redis";
 import { createClient } from "redis";
 
 const RedisStore = connectRedis(session);
