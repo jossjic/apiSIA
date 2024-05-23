@@ -1105,6 +1105,25 @@ app.put("/alimentos/stock/:id", (req, res) => {
   );
 });
 
+//actualizar alimento solo con FECHA DE SALIDA
+
+app.put("/alimentos/out/:id", (req, res) => {
+  const { id } = req.params;
+  const { a_fechaSalida } = req.body;
+  connection.query(
+    "UPDATE Alimento SET a_fechaSalida = ? WHERE a_id = ?",
+    [a_fechaSalida, id],
+
+    (err, result) => {
+      if (err) {
+        console.error("Error al actualizar alimento:", err);
+        return res.status(500).send("Error de servidor");
+      }
+      res.status(200).send("Alimento actualizado correctamente");
+    }
+  );
+});
+
 // Eliminar un alimento por ID
 app.delete("/alimentos/:id", (req, res) => {
   const { id } = req.params;
