@@ -6,9 +6,9 @@ import crypto, { verify } from "crypto";
 import mysqlSession from "express-mysql-session";
 import jwt from "jsonwebtoken";
 import cookieParser from "cookie-parser";
+import axios from "axios";
 
 const app = express();
-const axios = require("axios");
 app.use(cookieParser());
 
 // Middleware para permitir solicitudes desde localhost:5173
