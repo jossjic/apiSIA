@@ -886,7 +886,6 @@ app.get("/alimentos/:id", (req, res) => {
   );
 });
 
-// Agregar un nuevo alimento
 // Obtener información de un alimento por su ID
 app.get("/alimentos/:id", (req, res) => {
   const { id } = req.params;
@@ -949,26 +948,7 @@ app.post("/alimentos", (req, res) => {
 
         if (results.length > 0) {
           // Si existe, actualiza el stock
-          const existingAlimento = results[0];
-          const newStock =
-            parseInt(existingAlimento.a_stock) + parseInt(a_stock);
-          connection.query(
-            "UPDATE Alimento SET a_stock = ?, a_fechaSalida = ?, a_fechaEntrada = ? WHERE a_id = ?",
-            [newStock, a_fechaSalida, a_fechaEntrada, existingAlimento.a_id],
-            (err, result) => {
-              if (err) {
-                console.error(
-                  "Error al actualizar el stock del alimento:",
-                  err
-                );
-                return res.status(500).send("Error de servidor");
-              }
-              registrarAccion(existingAlimento.a_id, 2, a_stock); // Actualizar stock
-              res
-                .status(200)
-                .send("Stock del alimento actualizado correctamente");
-            }
-          );
+          registrarAccion(results[0].a_id, 0, a_stock); // Actualizar stock
         } else {
           // Si no existe, inserta un nuevo registro
           const query =
@@ -1020,26 +1000,8 @@ app.post("/alimentos", (req, res) => {
 
         if (results.length > 0) {
           // Si existe, actualiza el stock
-          const existingAlimento = results[0];
-          const newStock =
-            parseInt(existingAlimento.a_stock) + parseInt(a_stock);
-          connection.query(
-            "UPDATE Alimento SET a_stock = ?, a_fechaSalida = ?, a_fechaEntrada = ? WHERE a_id = ?",
-            [newStock, a_fechaSalida, a_fechaEntrada, existingAlimento.a_id],
-            (err, result) => {
-              if (err) {
-                console.error(
-                  "Error al actualizar el stock del alimento:",
-                  err
-                );
-                return res.status(500).send("Error de servidor");
-              }
-              registrarAccion(existingAlimento.a_id, 2, a_stock); // Actualizar stock
-              res
-                .status(200)
-                .send("Stock del alimento actualizado correctamente");
-            }
-          );
+
+          registrarAccion(results[0].a_id, 0, a_stock); // Actualizar stock
         } else {
           // Si no existe, inserta un nuevo registro
           const query =
