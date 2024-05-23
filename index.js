@@ -982,7 +982,7 @@ app.post("/alimentos", (req, res) => {
               console.error("Error al insertar alimento:", err);
               return res.status(500).send("Error de servidor");
             }
-            registrarAccion(result.insertId, 0, a_stock); // Nuevo stock
+            registrarAccion(result.insertId, 2, a_stock); // Nuevo stock
             res.status(201).send("Alimento agregado correctamente");
           });
         }
@@ -1035,7 +1035,7 @@ app.post("/alimentos", (req, res) => {
               console.error("Error al insertar alimento:", err);
               return res.status(500).send("Error de servidor");
             }
-            registrarAccion(result.insertId, 0, a_stock); // Nuevo stock
+            registrarAccion(result.insertId, 2, a_stock); // Nuevo stock
             res.status(201).send("Alimento agregado correctamente");
           });
         }
