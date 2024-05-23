@@ -5,11 +5,13 @@ import { connection } from "./db.js";
 import crypto, { verify } from "crypto";
 import mysqlSession from "express-mysql-session";
 import jwt from "jsonwebtoken";
-import cookieParser from "cookie-parser";
 import axios from "axios";
+import { createClient } from "redis";
+import RedisStore from "connect-redis";
 
 const app = express();
-app.use(cookieParser());
+const redisClient = createClient();
+
 
 // Middleware para permitir solicitudes desde localhost:5173
 app.use((req, res, next) => {
@@ -25,15 +27,17 @@ const sessionStore = new MySQLStore({}, connection);
 const ACCESS_TOKEN_SECRET = "asdioas";
 const REFRESH_TOKEN_SECRET = "asdioasre";
 
-app.use(
-  session({
-    key: "user_cookie",
-    secret: "12345",
-    store: sessionStore,
-    resave: false,
-    saveUninitialized: false,
-  })
-);
+app.use(session({
+  store: new RedisStore({ client: redisClient }),
+  secret: '12345',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: false, // Cambia a true en producción con HTTPS
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000 // La cookie expira en 24 horas
+  }
+}));
 
 // Middleware para analizar el cuerpo de las solicitudes como JSON
 app.use(bodyParser.json());
@@ -83,10 +87,7 @@ app.post("/login", (req, res) => {
           REFRESH_TOKEN_SECRET,
           { expiresIn: "7d" }
         );
-        res.cookie("accessToken", accessToken, {
-          maxAge: 300000,
-          httpOnly: true,
-        });
+        req.session.userId = userData.u_id;
         res.json({ userId: userData.u_id, accessToken, refreshToken });
       } else {
         res.status(401).send("Contraseña incorrecta");
