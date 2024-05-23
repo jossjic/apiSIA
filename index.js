@@ -11,7 +11,7 @@ import RedisStore from "connect-redis";
 
 const app = express();
 const redisClient = createClient();
-
+redisClient.connect().catch(console.error);
 
 // Middleware para permitir solicitudes desde localhost:5173
 app.use((req, res, next) => {
