@@ -949,6 +949,7 @@ app.post("/alimentos", (req, res) => {
         if (results.length > 0) {
           // Si existe, actualiza el stock
           registrarAccion(results[0].a_id, 0, a_stock); // Actualizar stock
+          res.status(200).send("Stock actualizado correctamente");
         } else {
           // Si no existe, inserta un nuevo registro
           const query =
@@ -1002,6 +1003,9 @@ app.post("/alimentos", (req, res) => {
           // Si existe, actualiza el stock
 
           registrarAccion(results[0].a_id, 0, a_stock); // Actualizar stock
+          //response ok
+
+          res.status(200).send("Alimento actualizado correctamente");
         } else {
           // Si no existe, inserta un nuevo registro
           const query =
