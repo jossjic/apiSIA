@@ -8,6 +8,7 @@ import jwt from "jsonwebtoken";
 import cookieParser from "cookie-parser";
 
 const app = express();
+const axios = require("axios");
 app.use(cookieParser());
 
 // Middleware para permitir solicitudes desde localhost:5173
@@ -886,6 +887,26 @@ app.get("/alimentos/:id", (req, res) => {
 });
 
 // Agregar un nuevo alimento
+// Obtener información de un alimento por su ID
+app.get("/alimentos/:id", (req, res) => {
+  const { id } = req.params;
+  connection.query(
+    "SELECT * FROM Alimento LEFT OUTER JOIN Marca ON Alimento.m_id = Marca.m_id NATURAL JOIN UnidadMedida WHERE a_id = ?",
+    [id],
+    (err, rows) => {
+      if (err) {
+        console.error("Error de consulta:", err);
+        return res.status(500).send("Error de servidor");
+      }
+      if (rows.length === 0) {
+        return res.status(404).send("Alimento no encontrado");
+      }
+      res.json(rows[0]);
+    }
+  );
+});
+
+// Agregar un nuevo alimento
 app.post("/alimentos", (req, res) => {
   const {
     a_nombre,
@@ -896,9 +917,25 @@ app.post("/alimentos", (req, res) => {
     a_fechaCaducidad,
     um_id,
     m_id,
+    u_id, // Nuevo parámetro: ID del usuario que realiza la acción
   } = req.body;
   console.log(req.body);
-  // Primero, verifica si ya existe un alimento con los mismos atributos relevantes
+
+  const registrarAccion = (a_id, actionType, quantity) => {
+    return axios
+      .post("http://localhost:3000/usuarios/stock", {
+        a_id,
+        u_id,
+        actionType,
+        quantity,
+      })
+      .then((response) => {
+        console.log("Procedimiento ejecutado correctamente");
+      })
+      .catch((error) => {
+        console.error("Error al ejecutar el procedimiento:", error);
+      });
+  };
 
   if (a_fechaCaducidad === null) {
     connection.query(
@@ -926,6 +963,7 @@ app.post("/alimentos", (req, res) => {
                 );
                 return res.status(500).send("Error de servidor");
               }
+              registrarAccion(existingAlimento.a_id, 2, a_stock); // Actualizar stock
               res
                 .status(200)
                 .send("Stock del alimento actualizado correctamente");
@@ -964,6 +1002,7 @@ app.post("/alimentos", (req, res) => {
               console.error("Error al insertar alimento:", err);
               return res.status(500).send("Error de servidor");
             }
+            registrarAccion(result.insertId, 0, a_stock); // Nuevo stock
             res.status(201).send("Alimento agregado correctamente");
           });
         }
@@ -995,6 +1034,7 @@ app.post("/alimentos", (req, res) => {
                 );
                 return res.status(500).send("Error de servidor");
               }
+              registrarAccion(existingAlimento.a_id, 2, a_stock); // Actualizar stock
               res
                 .status(200)
                 .send("Stock del alimento actualizado correctamente");
@@ -1033,6 +1073,7 @@ app.post("/alimentos", (req, res) => {
               console.error("Error al insertar alimento:", err);
               return res.status(500).send("Error de servidor");
             }
+            registrarAccion(result.insertId, 0, a_stock); // Nuevo stock
             res.status(201).send("Alimento agregado correctamente");
           });
         }
