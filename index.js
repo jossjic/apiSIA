@@ -87,7 +87,9 @@ app.post("/login", (req, res) => {
           REFRESH_TOKEN_SECRET,
           { expiresIn: "7d" }
         );
-        // req.session.userId = userData.u_id;
+        req.session.userId = userData.u_id;
+        const uSess = req.session.userId;
+        console.log("User sesion:", uSess);
         res.json({ userId: userData.u_id, accessToken, refreshToken });
       } else {
         res.status(401).send("Contraseña incorrecta");
