@@ -250,6 +250,7 @@ app.get("/alimentos/join/marca", (req, res) => {
     }
   );
 });
+
 // mostrar solo alimentos caducados dCad
 app.get("/alimentos/caducados/dCad", (req, res) => {
   const page = parseInt(req.query.page) || 1; // Página actual
@@ -1937,6 +1938,16 @@ app.post("/usuarios/stock", (req, res) => {
       }
       res.status(200).send("Procedimiento ejecutado correctamente");
     }
+  );
+  console.log(
+    "a_id: ",
+    a_id,
+    "u_id: ",
+    u_id,
+    "actionType: ",
+    actionType,
+    "quantity: ",
+    quantity
   );
 });
 
