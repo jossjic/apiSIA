@@ -35,6 +35,8 @@ app.use(session({
   cookie: {
     secure: false, // Cambia a true en producción con HTTPS
     httpOnly: true,
+    sameSite: 'lax',
+    path: '/',
     maxAge: 24 * 60 * 60 * 1000 // La cookie expira en 24 horas
   }
 }));
@@ -105,7 +107,9 @@ app.post("/logout", (req, res) => {
 });
 
 //Validar sesion
-app.use("/validate", function (req, res) {
+app.use("/validate", (req, res) => {
+  console.log("Session ID:", req.session.id);
+  console.log("Session User ID:", req.session.userId);
   if (req.session.userId) {
     res.sendStatus(200);
   } else {
