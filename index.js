@@ -57,7 +57,6 @@ app.get("/", (req, res) => {
 app.post("/login", (req, res) => {
   const { id, password } = req.body;
 
-  // Verificar el usuario en la base de datos
   connection.query(
     "SELECT * FROM Usuario WHERE u_id = ?",
     [id],
@@ -77,28 +76,34 @@ app.post("/login", (req, res) => {
         .digest("hex");
 
       if (userData.u_contraseña === hashedPassword) {
-        // Generar token de acceso
-        const accessToken = jwt.sign(
-          { userId: userData.u_id },
-          ACCESS_TOKEN_SECRET,
-          { expiresIn: "15m" }
-        );
-        // Generar token de actualización
-        const refreshToken = jwt.sign(
-          { userId: userData.u_id },
-          REFRESH_TOKEN_SECRET,
-          { expiresIn: "7d" }
-        );
-        req.session.userId = userData.u_id;
-        const uSess = req.session.userId;
-        console.log("User sesion:", uSess);
-        res.json({ userId: userData.u_id, accessToken, refreshToken });
+        req.session.userId = userData.u_id; // Guardar el userId en la sesión
+
+        req.session.save((err) => {
+          if (err) {
+            console.error("Error al guardar la sesión:", err);
+            return res.status(500).send("Error de servidor");
+          }
+
+          const accessToken = jwt.sign(
+            { userId: userData.u_id },
+            ACCESS_TOKEN_SECRET,
+            { expiresIn: "15m" }
+          );
+          const refreshToken = jwt.sign(
+            { userId: userData.u_id },
+            REFRESH_TOKEN_SECRET,
+            { expiresIn: "7d" }
+          );
+
+          res.json({ userId: userData.u_id, accessToken, refreshToken });
+        });
       } else {
         res.status(401).send("Contraseña incorrecta");
       }
     }
   );
 });
+
 
 app.post("/logout", (req, res) => {
   const { token } = req.body;
