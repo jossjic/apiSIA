@@ -1,17 +1,10 @@
 import express from "express";
 import bodyParser from "body-parser";
-import session from "express-session";
 import { connection } from "./db.js";
-import crypto, { verify } from "crypto";
-import mysqlSession from "express-mysql-session";
-import jwt from "jsonwebtoken";
+import crypto from "crypto";
 import axios from "axios";
-import { createClient } from "redis";
-import RedisStore from "connect-redis";
 
 const app = express();
-const redisClient = createClient();
-redisClient.connect().catch(console.error);
 
 // Middleware para permitir solicitudes desde localhost:5173
 app.use((req, res, next) => {
@@ -21,23 +14,6 @@ app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Credentials", "true");
   next();
 });
-
-const MySQLStore = mysqlSession(session);
-const sessionStore = new MySQLStore({}, connection);
-const ACCESS_TOKEN_SECRET = "asdioas";
-const REFRESH_TOKEN_SECRET = "asdioasre";
-
-app.use(session({
-  store: new RedisStore({ client: redisClient }),
-  secret: '12345',
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    secure: false, // Cambia a true en producción con HTTPS
-    httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000 // La cookie expira en 24 horas
-  }
-}));
 
 // Middleware para analizar el cuerpo de las solicitudes como JSON
 app.use(bodyParser.json());
@@ -75,60 +51,12 @@ app.post("/login", (req, res) => {
         .digest("hex");
 
       if (userData.u_contraseña === hashedPassword) {
-        // Generar token de acceso
-        const accessToken = jwt.sign(
-          { userId: userData.u_id },
-          ACCESS_TOKEN_SECRET,
-          { expiresIn: "15m" }
-        );
-        // Generar token de actualización
-        const refreshToken = jwt.sign(
-          { userId: userData.u_id },
-          REFRESH_TOKEN_SECRET,
-          { expiresIn: "7d" }
-        );
-        // req.session.userId = userData.u_id;
-        const uSess = req.session.userId;
-        console.log("User sesion:", uSess);
-        res.json({ userId: userData.u_id, accessToken, refreshToken });
+        res.json({ userId: userData.u_id});
       } else {
         res.status(401).send("Contraseña incorrecta");
       }
     }
   );
-});
-
-app.post("/logout", (req, res) => {
-  const { token } = req.body;
-  refreshTokens = refreshTokens.filter((t) => t !== token);
-  res.sendStatus(204);
-});
-
-//Validar sesion
-app.use("/validate", (req, res) => {
-  console.log("Session ID:", req.session.id);
-  console.log("Session User ID:", req.session.userId);
-  if (req.session.userId) {
-    res.sendStatus(200);
-  } else {
-    res.sendStatus(400);
-  }
-});
-
-// Guardar informacion en la sesion
-app.post("/saveMessage", (req, res) => {
-  const { message } = req.body;
-  req.session.message = message;
-  const message2 = req.session.message;
-  console.log("Mensaje obtenido de la sesión:", message2);
-  res.sendStatus(200);
-});
-
-// Obtener informacion de la sesion
-app.get("/getMessage", (req, res) => {
-  const message = req.session.message || "";
-  console.log("Mensaje obtenido de la sesión:", message);
-  res.json(message);
 });
 
 //-------------------------------------------------------------------------------------------------------
