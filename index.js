@@ -51,7 +51,7 @@ app.post("/login", (req, res) => {
         .digest("hex");
 
       if (userData.u_contraseña === hashedPassword) {
-        res.json({ userId: userData.u_id});
+        res.json({ userId: userData.u_id, userRol: userData.u_rol});
       } else {
         res.status(401).send("Contraseña incorrecta");
       }
