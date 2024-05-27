@@ -1452,9 +1452,9 @@ app.put("/usuarios/:id", (req, res) => {
   );
 });
 
-// Cambiar la contraseña de un usuario por ID
-app.put("/usuarios/:id/contraseña", (req, res) => {
-  const { id } = req.params;
+// Cambiar la contraseña de un usuario por email
+app.put("/usuarios/:email/contraseña", (req, res) => {
+  const { email } = req.params;
   const { nueva_contraseña } = req.body;
 
   // Verificar si se proporcionó una nueva contraseña válida en el cuerpo de la solicitud
@@ -1474,8 +1474,8 @@ app.put("/usuarios/:id/contraseña", (req, res) => {
 
   // Ejecutar la consulta para actualizar la contraseña del usuario
   connection.query(
-    "UPDATE Usuario SET u_contraseña = ? WHERE u_id = ?",
-    [hashedNuevaContraseña, id],
+    "UPDATE Usuario SET u_contraseña = ? WHERE u_email = ?",
+    [hashedNuevaContraseña, email],
     (err, result) => {
       if (err) {
         console.error("Error al cambiar la contraseña del usuario:", err);
