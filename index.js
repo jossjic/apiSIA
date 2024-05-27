@@ -1382,6 +1382,25 @@ app.get("/usuarios/:id", (req, res) => {
   );
 });
 
+// Verificar si un correo electrónico existe
+app.get("/usuarios/verificar-email/:email", (req, res) => {
+  const { email } = req.params;
+  connection.query(
+    "SELECT 1 FROM Usuario WHERE u_email = ? LIMIT 1",
+    [email],
+    (err, rows) => {
+      if (err) {
+        console.error("Error de consulta:", err);
+        return res.status(500).send("Error de servidor");
+      }
+      if (rows.length === 0) {
+        return res.status(404).send("Correo no encontrado");
+      }
+      res.status(200).send("Correo encontrado");
+    }
+  );
+});
+
 // Agregar un nuevo usuario
 app.post("/usuarios", (req, res) => {
   const { u_id, u_nombre, u_apellidos, u_email, u_contraseña } = req.body;
