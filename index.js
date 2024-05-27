@@ -33,7 +33,7 @@ app.post("/login", (req, res) => {
 
   // Verificar el usuario en la base de datos
   connection.query(
-    "SELECT * FROM Usuario WHERE u_id = ? OR u_email = ?",
+    "SELECT * FROM Usuario WHERE u_id = ?",
     [id],
     (err, rows) => {
       if (err) {
