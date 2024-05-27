@@ -29,19 +29,19 @@ app.get("/", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  const { id, password } = req.body;
+  const { identifier, password } = req.body;
 
   // Verificar el usuario en la base de datos
   connection.query(
-    "SELECT * FROM Usuario WHERE u_id = ?",
-    [id],
+    "SELECT * FROM Usuario WHERE u_id = ? OR u_email = ?",
+    [identifier, identifier],
     (err, rows) => {
       if (err) {
         console.error("Error de consulta:", err);
         return res.status(500).send("Error de servidor");
       }
       if (rows.length === 0) {
-        return res.status(401).send("Usuario incorrecto");
+        return res.status(401).send("Credenciales incorrectas");
       }
 
       const userData = rows[0];
@@ -51,9 +51,9 @@ app.post("/login", (req, res) => {
         .digest("hex");
 
       if (userData.u_contraseña === hashedPassword) {
-        res.json({ userId: userData.u_id});
+        res.json({ userId: userData.u_id });
       } else {
-        res.status(401).send("Contraseña incorrecta");
+        res.status(401).send("Credenciales incorrectas");
       }
     }
   );
