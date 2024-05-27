@@ -1453,7 +1453,7 @@ app.put("/usuarios/:id", (req, res) => {
 });
 
 // Cambiar la contraseña de un usuario por email
-app.put("/usuarios/:email/contraseña", (req, res) => {
+app.put("/usuarios/:email/pass", (req, res) => {
   const { email } = req.params;
   const { nueva_contraseña } = req.body;
 
