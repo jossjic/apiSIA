@@ -3,26 +3,27 @@ import bodyParser from "body-parser";
 import { connection } from "./db.js";
 import crypto from "crypto";
 import axios from "axios";
+import cors from "cors";
 
 const app = express();
 
-// Middleware para permitir solicitudes desde localhost:5173
-app.use((req, res, next) => {
-  res.setHeader("Access-Control-Allow-Origin", "http://localhost:5173");
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  res.setHeader("Access-Control-Allow-Credentials", "true");
-  next();
-});
+app.use(
+  cors({
+    origin: "http://localhost:4000", // Allow requests from the frontend URL
+    methods: "GET,POST,PUT,DELETE",
+    allowedHeaders: "Content-Type,Authorization",
+    credentials: true,
+  })
+);
 
-// Middleware para analizar el cuerpo de las solicitudes como JSON
+// Middleware for parsing JSON request bodies
 app.use(bodyParser.json());
 
 app.get("/", (req, res) => {
   connection.query("SELECT * FROM Alimento", (err, rows) => {
     if (err) {
-      console.error("Error de consulta:", err);
-      return res.status(500).send("Error de servidor");
+      console.error("Query error:", err);
+      return res.status(500).send("Server error");
     }
     res.json(rows);
   });
@@ -31,17 +32,16 @@ app.get("/", (req, res) => {
 app.post("/login", (req, res) => {
   const { id, password } = req.body;
 
-  // Verificar el usuario en la base de datos
   connection.query(
     "SELECT * FROM Usuario WHERE u_id = ?",
     [id],
     (err, rows) => {
       if (err) {
-        console.error("Error de consulta:", err);
-        return res.status(500).send("Error de servidor");
+        console.error("Query error:", err);
+        return res.status(500).send("Server error");
       }
       if (rows.length === 0) {
-        return res.status(401).send("Usuario incorrecto");
+        return res.status(401).send("Invalid username or password");
       }
 
       const userData = rows[0];
@@ -51,9 +51,9 @@ app.post("/login", (req, res) => {
         .digest("hex");
 
       if (userData.u_contraseña === hashedPassword) {
-        res.json({ userId: userData.u_id, userRol: userData.u_rol});
+        res.json({ userId: userData.u_id, userRol: userData.u_rol });
       } else {
-        res.status(401).send("Contraseña incorrecta");
+        res.status(401).send("Invalid username or password");
       }
     }
   );
@@ -1937,7 +1937,7 @@ app.get("/usuarios/:id/transacciones", (req, res) => {
   );
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Servidor Express en funcionamiento en el puerto ${PORT}`);
 });
