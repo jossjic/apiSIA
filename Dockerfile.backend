@@ -1,0 +1,28 @@
+# Usar una imagen base de Node.js
+FROM ubuntu:20.04
+
+# Instalar Node.js
+RUN apt-get update && apt-get install -y curl mysql-client && curl -sL https://deb.nodesource.com/setup_16.x | bash - && apt-get install -y nodejs
+
+
+# Establecer el directorio de trabajo dentro del contenedor
+WORKDIR /app
+
+# Copiar package.json y package-lock.json al contenedor
+COPY package*.json ./
+
+# Instalar dependencias
+RUN npm install
+
+# Copiar el resto de la aplicación
+COPY . .
+
+# Exponer el puerto en el que la aplicación se ejecuta
+EXPOSE 3001
+
+# Comando para ejecutar la aplicación
+#CMD ["npm", "start"]
+
+RUN chmod +x ./wait_db.sh
+
+RUN sed -i 's/\r//' ./wait_db.sh
