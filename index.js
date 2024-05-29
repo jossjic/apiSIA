@@ -32,6 +32,12 @@ app.get("/", (req, res) => {
 app.post("/login", (req, res) => {
   const { id, password } = req.body;
 
+  console.log(`Login attempt: id=${id}, password=${password}`);
+
+  if (!id || !password) {
+    return res.status(400).send("Missing id or password");
+  }
+
   connection.query(
     "SELECT * FROM Usuario WHERE u_id = ?",
     [id],
@@ -41,18 +47,23 @@ app.post("/login", (req, res) => {
         return res.status(500).send("Server error");
       }
       if (rows.length === 0) {
+        console.log("User not found");
         return res.status(401).send("Invalid username or password");
       }
 
       const userData = rows[0];
+      console.log("Retrieved user data:", userData); // Log the user data for debugging
+
       const hashedPassword = crypto
         .createHash("sha256")
         .update(password)
         .digest("hex");
 
-      if (userData.u_contraseña === hashedPassword) {
+      if (userData.u_pass === hashedPassword) {
+        console.log("Login successful");
         res.json({ userId: userData.u_id, userRol: userData.u_rol });
       } else {
+        console.log("Invalid password", userData.u_pass, hashedPassword);
         res.status(401).send("Invalid username or password");
       }
     }
@@ -1403,15 +1414,15 @@ app.get("/usuarios/verificar-email/:email", (req, res) => {
 
 // Agregar un nuevo usuario
 app.post("/usuarios", (req, res) => {
-  const { u_id, u_nombre, u_apellidos, u_email, u_contraseña } = req.body;
+  const { u_id, u_nombre, u_apellidos, u_email, u_pass } = req.body;
 
   const hashedContraseña = crypto
     .createHash("sha256")
-    .update(u_contraseña)
+    .update(u_pass)
     .digest("hex");
 
   connection.query(
-    "INSERT INTO Usuario (u_id, u_nombre, u_apellidos, u_email, u_contraseña) VALUES (?, ?, ?, ?, ?)",
+    "INSERT INTO Usuario (u_id, u_nombre, u_apellidos, u_email, u_pass) VALUES (?, ?, ?, ?, ?)",
     [u_id, u_nombre, u_apellidos, u_email, hashedContraseña],
     (err, result) => {
       if (err) {
@@ -1474,7 +1485,7 @@ app.put("/usuarios/:email/pass", (req, res) => {
 
   // Ejecutar la consulta para actualizar la contraseña del usuario
   connection.query(
-    "UPDATE Usuario SET u_contraseña = ? WHERE u_email = ?",
+    "UPDATE Usuario SET u_pass = ? WHERE u_email = ?",
     [hashedNuevaContraseña, email],
     (err, result) => {
       if (err) {

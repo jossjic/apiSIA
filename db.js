@@ -6,6 +6,7 @@ export const connection = mysql.createConnection({
   password: "Joss50Joss70",
   database: "db_sia",
   port: "3306",
+  charset: "utf8mb4", // Añade esta línea
 });
 
 connection.connect((err) => {
