@@ -1,19 +1,33 @@
+import mysql from "mysql2";
+
+export const connection = mysql.createConnection({
+  host: "localhost",
+  user: "root",
+  password: "Joss50Joss70",
+  database: "db_sia",
+  port: "3306",
+  charset: "utf8mb4", // Añade esta línea
+});
+
+connection.connect((err) => {
+  if (err) {
+    console.error("Error de conexión:", err);
+    return;
+  }
+  console.log("Conectado a la base de datos MySQL");
+});
+
 import express from "express";
 import bodyParser from "body-parser";
-import { connection } from "./db.js";
 import crypto from "crypto";
 import axios from "axios";
 import cors from "cors";
 
 const app = express();
 
-const PORT = process.env.API_PORT;
-const FRONTEND_PORT = process.env.FRONTEND_PORT;
-const API_HOST = process.env.API_HOST;
-
 app.use(
   cors({
-    origin: `http://${API_HOST}:${FRONTEND_PORT}`,
+    origin: "http://localhost:5173", // Allow requests from the frontend URL
     methods: "GET,POST,PUT,DELETE",
     allowedHeaders: "Content-Type,Authorization",
     credentials: true,
@@ -63,11 +77,11 @@ app.post("/login", (req, res) => {
         .update(password)
         .digest("hex");
 
-      if (userData.u_pass === hashedPassword) {
+      if (userData.u_contraseña === hashedPassword) {
         console.log("Login successful");
         res.json({ userId: userData.u_id, userRol: userData.u_rol });
       } else {
-        console.log("Invalid password", userData.u_pass, hashedPassword);
+        console.log("Invalid password", userData.u_contraseña, hashedPassword);
         res.status(401).send("Invalid username or password");
       }
     }
@@ -871,7 +885,7 @@ app.post("/alimentos", (req, res) => {
 
   const registrarAccion = (a_id, actionType, quantity) => {
     return axios
-      .post(`http://${API_HOST}:${PORT}/usuarios/stock`, {
+      .post("http://localhost:3000/usuarios/stock", {
         a_id,
         u_id,
         actionType,
@@ -1418,15 +1432,15 @@ app.get("/usuarios/verificar-email/:email", (req, res) => {
 
 // Agregar un nuevo usuario
 app.post("/usuarios", (req, res) => {
-  const { u_id, u_nombre, u_apellidos, u_email, u_pass } = req.body;
+  const { u_id, u_nombre, u_apellidos, u_email, u_contraseña } = req.body;
 
   const hashedContraseña = crypto
     .createHash("sha256")
-    .update(u_pass)
+    .update(u_contraseña)
     .digest("hex");
 
   connection.query(
-    "INSERT INTO Usuario (u_id, u_nombre, u_apellidos, u_email, u_pass) VALUES (?, ?, ?, ?, ?)",
+    "INSERT INTO Usuario (u_id, u_nombre, u_apellidos, u_email, u_contraseña) VALUES (?, ?, ?, ?, ?)",
     [u_id, u_nombre, u_apellidos, u_email, hashedContraseña],
     (err, result) => {
       if (err) {
@@ -1489,7 +1503,7 @@ app.put("/usuarios/:email/pass", (req, res) => {
 
   // Ejecutar la consulta para actualizar la contraseña del usuario
   connection.query(
-    "UPDATE Usuario SET u_pass = ? WHERE u_email = ?",
+    "UPDATE Usuario SET u_contraseña = ? WHERE u_email = ?",
     [hashedNuevaContraseña, email],
     (err, result) => {
       if (err) {
@@ -1952,6 +1966,7 @@ app.get("/usuarios/:id/transacciones", (req, res) => {
   );
 });
 
+const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Servidor Express en funcionamiento en el puerto ${PORT}`);
 });
