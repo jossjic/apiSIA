@@ -4,6 +4,7 @@ import { connection } from "./db.js";
 import crypto from "crypto";
 import axios from "axios";
 import cors from "cors";
+import xlsx from "xlsx";
 
 const app = express();
 
@@ -75,7 +76,31 @@ app.post("/login", (req, res) => {
 });
 
 //-------------------------------------------------------------------------------------------------------
-// PRUEBAAAAAAAAAAAAAAAAA
+
+// xlsx para alimentos
+
+app.get("/alimentos/xlsx", (req, res) => {
+  connection.query("SELECT * FROM Alimento", (err, rows) => {
+    if (err) {
+      console.error("Error de consulta:", err);
+      return res.status(500).send("Error de servidor");
+    }
+
+    const wb = xlsx.utils.book_new();
+    const ws = xlsx.utils.json_to_sheet(rows);
+    xlsx.utils.book_append_sheet(wb, ws, "Alimentos");
+
+    const buffer = xlsx.write(wb, { type: "buffer", bookType: "xlsx" });
+
+    res.setHeader("Content-Disposition", "attachment; filename=alimentos.xlsx");
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+    res.send(buffer);
+  });
+});
+
 // Obtener fechas de caducidad de UN ALIMENTO ESPECÍFICO (Lata de Atún 200 g)
 app.get("/alimentos/atun", (req, res) => {
   connection.query(

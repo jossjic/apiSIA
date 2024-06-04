@@ -3,9 +3,9 @@ import mysql from "mysql2";
 export const connection = mysql.createConnection({
   host: "localhost",
   user: "root",
-  password: "Joss50Joss70",
+  password: "AdminSIA10042024JJLACV!",
   database: "db_sia",
-  port: "3306",
+  port: "3308",
   charset: "utf8mb4", // Añade esta línea
 });
 
@@ -22,6 +22,7 @@ import bodyParser from "body-parser";
 import crypto from "crypto";
 import axios from "axios";
 import cors from "cors";
+import xlsx from "xlsx";
 
 const app = express();
 
@@ -86,6 +87,30 @@ app.post("/login", (req, res) => {
       }
     }
   );
+});
+
+// xlsx para alimentos
+
+app.get("/alimentos/xlsx", (req, res) => {
+  connection.query("SELECT * FROM Alimento", (err, rows) => {
+    if (err) {
+      console.error("Error de consulta:", err);
+      return res.status(500).send("Error de servidor");
+    }
+
+    const wb = xlsx.utils.book_new();
+    const ws = xlsx.utils.json_to_sheet(rows);
+    xlsx.utils.book_append_sheet(wb, ws, "Alimentos");
+
+    const buffer = xlsx.write(wb, { type: "buffer", bookType: "xlsx" });
+
+    res.setHeader("Content-Disposition", "attachment; filename=alimentos.xlsx");
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+    res.send(buffer);
+  });
 });
 
 //-------------------------------------------------------------------------------------------------------
