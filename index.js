@@ -14,7 +14,17 @@ const API_HOST = process.env.API_HOST;
 
 app.use(
   cors({
-    origin: `http://${API_HOST}:${FRONTEND_PORT}`,
+    origin: function (origin, callback) {
+      const whitelist = [
+        `http://${API_HOST}:${FRONTEND_PORT}`,
+        `http://localhost:` + FRONTEND_PORT,
+      ];
+      if (whitelist.indexOf(origin) !== -1 || !origin) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     methods: "GET,POST,PUT,DELETE",
     allowedHeaders: "Content-Type,Authorization",
     credentials: true,
