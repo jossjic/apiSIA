@@ -85,6 +85,29 @@ app.post("/login", (req, res) => {
   );
 });
 
+app.post("/validate", (req, res) => {
+  const { id } = req.body;
+
+  if (!id) {
+    return res.status(400).send("Missing id");
+  }
+
+  connection.query(
+    "SELECT * FROM Usuario WHERE u_id = ?",
+    [id],
+    (err, rows) => {
+      if (err) {
+        console.error("Query error:", err);
+        return res.status(500).send("Server error");
+      }
+      if (rows.length === 0) {
+        console.log("User not found");
+        return res.status(401).send("Invalid username");
+      }
+    }
+  );
+});
+
 //-------------------------------------------------------------------------------------------------------
 
 // xlsx para alimentos
