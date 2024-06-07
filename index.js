@@ -100,10 +100,15 @@ app.post("/validate", (req, res) => {
         console.error("Query error:", err);
         return res.status(500).send("Server error");
       }
+
       if (rows.length === 0) {
         console.log("User not found");
         return res.status(401).send("Invalid username");
       }
+
+      // If user is found
+      console.log("User found:", rows[0]);
+      return res.status(200).send("User validated");
     }
   );
 });
